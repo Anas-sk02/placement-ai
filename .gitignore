@@ -1,0 +1,35 @@
+# Node dependencies
+node_modules/
+.next/
+out/
+build/
+dist/
+
+# Python
+worker/__pycache__/
+worker/**/__pycache__/
+*.pyc
+worker/venv/
+.venv/
+env/
+
+# Environment Variables
+.env
+.env.local
+.env.production
+.env*.local
+
+# OS Files
+.DS_Store
+Thumbs.db
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+worker/logs/
+*.log
+
+# Supabase Local
+.branches/
+.temp/
