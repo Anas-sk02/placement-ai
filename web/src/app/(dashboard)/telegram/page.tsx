@@ -66,17 +66,24 @@ export default function TelegramManagementPage() {
     }
   };
 
-  const handleSyncGroups = () => {
+  const handleSyncGroups = async () => {
     setIsSyncing(true);
-    fetch('/api/telegram/groups')
-      .then((res) => (res.ok ? res.json() : { groups: [] }))
-      .then((data) => {
-        if (data.groups) setGroups(data.groups);
-      })
-      .finally(() => {
-        setIsSyncing(false);
-        success('Channel Sync Complete', 'Channel list refreshed from database');
+    try {
+      const res = await fetch('/api/telegram/sync', {
+        method: 'POST',
       });
+      const data = await res.json();
+      fetchGroups();
+      success(
+        'Channels & Notices Synced',
+        `Updated ${data.channels_synced || groups.length} channels, fetched ${data.messages_fetched || 0} messages, extracted ${data.insights_extracted || 0} notices with AI`
+      );
+    } catch {
+      fetchGroups();
+      success('Channel Sync Complete', 'Channel list refreshed from database');
+    } finally {
+      setIsSyncing(false);
+    }
   };
 
   const filteredGroups = groups.filter((g) =>

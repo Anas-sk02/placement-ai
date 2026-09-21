@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { supabaseAdmin } from '@/lib/supabase/admin';
+import { scrapeTelegramChannel } from '@/lib/telegram/channel-scraper';
+import { extractPlacementInsight } from '@/lib/ai/extractor';
 
 export async function GET() {
   try {
@@ -57,7 +59,7 @@ export async function POST(request: Request) {
     const { data: { user } } = await supabase.auth.getUser();
 
     const body = await request.json();
-    const { title, username, chat_type = 'CHANNEL', total_members } = body;
+    const { title, username, chat_type = 'CHANNEL' } = body;
 
     if (!title && !username) {
       return NextResponse.json({ error: 'Title or username is required' }, { status: 400 });
@@ -65,10 +67,32 @@ export async function POST(request: Request) {
 
     const cleanUsername = (username || '')
       .replace(/^@/, '')
-      .replace(/^https?:\/\/t\.me\//, '')
+      .replace(/^https?:\/\/t\.me\/(s\/)?/, '')
+      .split('/')[0]
+      .split('?')[0]
       .trim();
 
-    // Generate a deterministic or randomized negative 64-bit Telegram ID
+    // 1. Try to scrape real channel data and messages
+    let realTitle = title ? title.trim() : `@${cleanUsername}`;
+    let realMembers = 500;
+    let recentMessages: any[] = [];
+
+    if (cleanUsername) {
+      try {
+        const scraped = await scrapeTelegramChannel(cleanUsername);
+        if (scraped.title && !title) {
+          realTitle = scraped.title;
+        }
+        if (scraped.total_members > 0) {
+          realMembers = scraped.total_members;
+        }
+        recentMessages = scraped.messages || [];
+      } catch (err) {
+        console.warn('[Telegram Add] Public scraping fallback:', err);
+      }
+    }
+
+    // Generate a negative 64-bit Telegram ID from username
     let tgId = -1000000000000 - Math.floor(Math.random() * 899999999);
     if (cleanUsername) {
       let hash = 0;
@@ -79,18 +103,16 @@ export async function POST(request: Request) {
       tgId = -1000000000000 - Math.abs(hash);
     }
 
-    const groupTitle = title ? title.trim() : `@${cleanUsername}`;
-
     // Upsert into telegram_groups
     const { data: group, error: groupErr } = await (supabaseAdmin.from('telegram_groups') as any)
       .upsert(
         {
           telegram_id: tgId,
-          title: groupTitle,
+          title: realTitle,
           username: cleanUsername || null,
           chat_type: chat_type,
-          total_members: total_members || Math.floor(Math.random() * 700) + 300,
-          last_message_at: new Date().toISOString(),
+          total_members: realMembers,
+          last_message_at: recentMessages[0]?.date || new Date().toISOString(),
           last_discovered_at: new Date().toISOString(),
         },
         { onConflict: 'telegram_id' }
@@ -102,7 +124,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: groupErr.message }, { status: 400 });
     }
 
-    // Attach to user_monitored_groups if user is logged in
+    // Attach to user_monitored_groups
     if (user) {
       await (supabaseAdmin.from('user_monitored_groups') as any).upsert(
         {
@@ -115,12 +137,96 @@ export async function POST(request: Request) {
       );
     }
 
+    // Process and extract recent messages in background / immediately
+    let insightsCreated = 0;
+    for (const msg of recentMessages.slice(0, 10)) {
+      try {
+        // Save message
+        const { data: savedMsg } = await (supabaseAdmin.from('telegram_messages') as any)
+          .upsert(
+            {
+              group_id: group.id,
+              telegram_message_id: msg.message_id,
+              raw_text: msg.text,
+              sent_at: msg.date,
+              has_media: msg.has_link,
+            },
+            { onConflict: 'group_id,telegram_message_id' }
+          )
+          .select()
+          .single();
+
+        // Run AI Extraction
+        const insight = await extractPlacementInsight(msg.text, msg.date);
+        if (insight && insight.is_placement_related) {
+          insightsCreated++;
+
+          const { data: savedInsight } = await (supabaseAdmin.from('ai_insights') as any).insert({
+            user_id: user?.id || null,
+            group_id: group.id,
+            source_message_id: savedMsg?.id || null,
+            company_name: insight.company_name,
+            role_title: insight.role_title,
+            opportunity_type: insight.opportunity_type,
+            batch_year: insight.batch_year,
+            salary_or_stipend: insight.salary_or_stipend,
+            min_cgpa: insight.min_cgpa,
+            eligibility_raw: insight.eligibility_raw,
+            deadline_timestamp: insight.registration_deadline,
+            application_url: insight.application_url,
+            action_required: insight.action_required,
+            urgency: insight.urgency,
+            confidence_score: insight.confidence_score,
+            extraction_provider: insight.extraction_provider,
+            raw_message_text: msg.text,
+            group_name: group.title,
+          }).select().single();
+
+          // Upsert company
+          if (insight.company_name && insight.company_name !== 'Recruiter') {
+            await (supabaseAdmin.from('companies') as any).upsert(
+              {
+                name: insight.company_name,
+                domain: `${insight.company_name.toLowerCase().replace(/[^a-z0-9]/g, '')}.com`,
+                typical_ctc: insight.salary_or_stipend || 'Competitive',
+                min_cgpa: insight.min_cgpa || 7.0,
+                hiring_frequency: 'Campus Drive',
+                roles: insight.role_title ? [insight.role_title] : ['Software Engineer'],
+              },
+              { onConflict: 'name' }
+            );
+          }
+
+          // Register deadline if future
+          if (user && insight.registration_deadline) {
+            const deadlineTime = new Date(insight.registration_deadline).getTime();
+            if (deadlineTime > Date.now()) {
+              await (supabaseAdmin.from('deadlines') as any).insert({
+                user_id: user.id,
+                insight_id: savedInsight?.id || null,
+                company_name: insight.company_name,
+                title: `${insight.company_name} Application Deadline`,
+                deadline_at: insight.registration_deadline,
+                action_url: insight.application_url || null,
+                status: 'UPCOMING',
+              });
+            }
+          }
+        }
+      } catch (err) {
+        console.warn('[Telegram Add] Error parsing message:', err);
+      }
+    }
+
     return NextResponse.json({
       success: true,
       group: {
         ...group,
+        total_members: realMembers,
         is_monitored: true,
       },
+      messages_analyzed: recentMessages.length,
+      insights_created: insightsCreated,
     });
   } catch (err: any) {
     return NextResponse.json({ error: err.message || 'Failed to add Telegram channel' }, { status: 500 });
