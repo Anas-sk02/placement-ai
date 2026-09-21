@@ -234,7 +234,7 @@ export default function DashboardPage() {
 
           {urgentDeadline.action_url && (
             <a href={urgentDeadline.action_url} target="_blank" rel="noopener noreferrer">
-              <Button variant="urgent" size="sm" rightIcon={<ArrowRight size={14} />}>
+              <Button variant="danger" size="sm" rightIcon={<ArrowRight size={14} />}>
                 Open Registration Form
               </Button>
             </a>

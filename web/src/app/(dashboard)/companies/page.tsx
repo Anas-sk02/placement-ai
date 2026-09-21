@@ -209,7 +209,7 @@ export default function CompaniesPage() {
                 Target Placement Roles:
               </div>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
-                {company.roles.map((r) => (
+                {(company.roles || []).map((r) => (
                   <span
                     key={r}
                     style={{
@@ -243,7 +243,8 @@ export default function CompaniesPage() {
             </div>
           </div>
         ))}
-      </div>
+        </div>
+      )}
     </div>
   );
 }
