@@ -13,6 +13,7 @@ import {
   CheckCircle2,
   XCircle,
   AlertTriangle,
+  KanbanSquare,
 } from 'lucide-react';
 import { PlacementInsight } from '@/types/insight.types';
 import { StudentProfile } from '@/types/student.types';
@@ -25,6 +26,7 @@ export interface InsightCardProps {
   studentProfile?: StudentProfile;
   onViewRaw: (insight: PlacementInsight) => void;
   onTrackDeadline: (insight: PlacementInsight) => void;
+  onSaveToKanban?: (insight: PlacementInsight) => void;
 }
 
 export const InsightCard: React.FC<InsightCardProps> = ({
@@ -32,6 +34,7 @@ export const InsightCard: React.FC<InsightCardProps> = ({
   studentProfile,
   onViewRaw,
   onTrackDeadline,
+  onSaveToKanban,
 }) => {
   // Compute real-time eligibility if student profile is available
   const eligibility = studentProfile
@@ -94,6 +97,7 @@ export const InsightCard: React.FC<InsightCardProps> = ({
             <Badge
               eligibility={eligibility.status}
               style={{ fontSize: '10.5px', textTransform: 'none' }}
+              title={eligibility.reasons.join('\n')}
             >
               {eligibility.status === 'ELIGIBLE' && <CheckCircle2 size={12} style={{ marginRight: 4 }} />}
               {eligibility.status === 'NOT_ELIGIBLE' && <XCircle size={12} style={{ marginRight: 4 }} />}
@@ -170,7 +174,7 @@ export const InsightCard: React.FC<InsightCardProps> = ({
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          gap: '10px',
+          gap: '8px',
           paddingTop: '8px',
           borderTop: '1px solid var(--border-subtle)',
           flexWrap: 'wrap',
@@ -182,10 +186,21 @@ export const InsightCard: React.FC<InsightCardProps> = ({
           onClick={() => onViewRaw(insight)}
           leftIcon={<Eye size={14} />}
         >
-          View Source Post
+          View Source
         </Button>
 
-        <div style={{ display: 'flex', gap: '8px' }}>
+        <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+          {onSaveToKanban && (
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => onSaveToKanban(insight)}
+              leftIcon={<KanbanSquare size={13} />}
+            >
+              Save to Tracker
+            </Button>
+          )}
+
           <Button
             variant="secondary"
             size="sm"
@@ -206,7 +221,7 @@ export const InsightCard: React.FC<InsightCardProps> = ({
                 size="sm"
                 rightIcon={<ExternalLink size={14} />}
               >
-                Apply Form
+                Apply Link
               </Button>
             </a>
           )}

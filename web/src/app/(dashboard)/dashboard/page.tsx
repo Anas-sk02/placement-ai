@@ -13,6 +13,8 @@ import {
   ArrowRight,
   Radio,
   Plus,
+  KanbanSquare,
+  GraduationCap,
 } from 'lucide-react';
 import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
@@ -21,20 +23,9 @@ import { InsightCard } from '@/components/insights/InsightCard';
 import { SourceMessageDrawer } from '@/components/insights/SourceMessageDrawer';
 import { ConvertToDeadlineModal } from '@/components/insights/ConvertToDeadlineModal';
 import { PlacementInsight } from '@/types/insight.types';
-import { StudentProfile } from '@/types/student.types';
-
-const MOCK_PROFILE: StudentProfile = {
-  user_id: 'user-anas-01',
-  full_name: 'Anas Shaikh',
-  degree: 'B.Tech',
-  branch: 'CSE',
-  graduation_year: 2026,
-  cgpa: 8.42,
-  percentage: 86.5,
-  active_backlogs: 0,
-  history_backlogs: 0,
-  skills: ['Java', 'Spring Boot', 'TypeScript', 'Next.js', 'PostgreSQL', 'Docker'],
-};
+import { useStudentProfile } from '@/lib/hooks/useStudentProfile';
+import { useApplications } from '@/lib/hooks/useApplications';
+import { useToast } from '@/components/ui/Toast';
 
 const SAMPLE_INSIGHTS: PlacementInsight[] = [
   {
@@ -114,8 +105,22 @@ Online Assessment is scheduled for Sunday. Register before Friday 6 PM.`,
 ];
 
 export default function DashboardPage() {
+  const { profile } = useStudentProfile();
+  const { applications, addApplication } = useApplications();
+  const { success } = useToast();
+
   const [selectedRawInsight, setSelectedRawInsight] = useState<PlacementInsight | null>(null);
   const [selectedDeadlineInsight, setSelectedDeadlineInsight] = useState<PlacementInsight | null>(null);
+
+  const handleSaveToKanban = (insight: PlacementInsight) => {
+    addApplication({
+      company_name: insight.company_name,
+      role_title: insight.role_title || 'Software Engineer',
+      status: 'SAVED',
+      notes: `Saved from Dashboard feed (${insight.group_name || 'TPO Desk'})`,
+    });
+    success('Saved to Application Tracker', `${insight.company_name} is now on your Kanban board`);
+  };
 
   return (
     <div className="page-container">
@@ -132,22 +137,22 @@ export default function DashboardPage() {
       >
         <div>
           <h1 style={{ fontSize: '26px', fontWeight: 800, letterSpacing: '-0.5px' }}>
-            Placement Intelligence Command Center
+            Welcome back, {profile.full_name.split(' ')[0]}!
           </h1>
           <p style={{ fontSize: '14px', color: 'var(--text-secondary)', marginTop: '4px' }}>
-            Live status from 4 monitored Telegram channels • 2 urgent deadlines today
+            Placement Intelligence Active • {profile.branch} Batch of {profile.graduation_year} • CGPA: {profile.cgpa}
           </p>
         </div>
 
         <div style={{ display: 'flex', gap: '10px' }}>
-          <Link href="/insights">
-            <Button variant="secondary" size="md" leftIcon={<Sparkles size={16} />}>
-              Explore All Drives
+          <Link href="/applications">
+            <Button variant="secondary" size="md" leftIcon={<KanbanSquare size={16} />}>
+              Kanban Board ({applications.length})
             </Button>
           </Link>
-          <Link href="/telegram">
-            <Button variant="primary" size="md" leftIcon={<Send size={16} />}>
-              Manage Channels
+          <Link href="/companies">
+            <Button variant="primary" size="md" leftIcon={<GraduationCap size={16} />}>
+              Company Directory
             </Button>
           </Link>
         </div>
@@ -175,12 +180,14 @@ export default function DashboardPage() {
 
         <Card hoverable={false}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <span style={{ fontSize: '13px', color: 'var(--text-muted)' }}>Discovered Drives</span>
-            <Sparkles size={18} color="#ec4899" />
+            <span style={{ fontSize: '13px', color: 'var(--text-muted)' }}>Tracked Applications</span>
+            <KanbanSquare size={18} color="#a855f7" />
           </div>
-          <div style={{ fontSize: '28px', fontWeight: 800, marginTop: '8px' }}>38 Notices</div>
+          <div style={{ fontSize: '28px', fontWeight: 800, marginTop: '8px', color: 'var(--primary-light)' }}>
+            {applications.length} Drives
+          </div>
           <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '4px' }}>
-            +6 added today
+            Active on Kanban Board
           </div>
         </Card>
 
@@ -193,7 +200,7 @@ export default function DashboardPage() {
             2 Expiring
           </div>
           <div style={{ fontSize: '12px', color: 'var(--status-urgent)', marginTop: '4px' }}>
-            Next in 3 hours
+            Next in 3.5 hours
           </div>
         </Card>
 
@@ -206,7 +213,7 @@ export default function DashboardPage() {
             92% Qualified
           </div>
           <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '4px' }}>
-            Based on 8.42 CGPA (CSE)
+            Matched with {profile.cgpa} CGPA ({profile.branch})
           </div>
         </Card>
       </div>
@@ -297,9 +304,10 @@ export default function DashboardPage() {
             <InsightCard
               key={insight.id}
               insight={insight}
-              studentProfile={MOCK_PROFILE}
+              studentProfile={profile}
               onViewRaw={(ins) => setSelectedRawInsight(ins)}
               onTrackDeadline={(ins) => setSelectedDeadlineInsight(ins)}
+              onSaveToKanban={handleSaveToKanban}
             />
           ))}
         </div>

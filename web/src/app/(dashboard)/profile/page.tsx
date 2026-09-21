@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   UserCheck,
   Save,
@@ -9,28 +9,24 @@ import {
   AlertTriangle,
   GraduationCap,
   Sparkles,
+  RefreshCw,
 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
-import { StudentProfile } from '@/types/student.types';
+import { useStudentProfile } from '@/lib/hooks/useStudentProfile';
 import { evaluateEligibility } from '@/lib/business/eligibility-checker';
 import { useToast } from '@/components/ui/Toast';
 
 export default function ProfilePage() {
-  const { success } = useToast();
-  const [profile, setProfile] = useState<StudentProfile>({
-    user_id: 'user-anas-01',
-    full_name: 'Anas Shaikh',
-    college_name: 'Indian Institute of Technology / Engineering College',
-    degree: 'B.Tech',
-    branch: 'CSE',
-    graduation_year: 2026,
-    cgpa: 8.42,
-    percentage: 86.5,
-    active_backlogs: 0,
-    history_backlogs: 0,
-    skills: ['Java', 'Spring Boot', 'TypeScript', 'Next.js', 'PostgreSQL', 'Docker'],
-  });
+  const { profile, loading, saveProfile } = useStudentProfile();
+  const { success, error } = useToast();
+
+  const [formData, setFormData] = useState(profile);
+  const [isSaving, setIsSaving] = useState(false);
+
+  useEffect(() => {
+    setFormData(profile);
+  }, [profile]);
 
   // Simulator Criteria State
   const [testCgpaCutoff, setTestCgpaCutoff] = useState('7.5');
@@ -38,16 +34,23 @@ export default function ProfilePage() {
   const [testBatch, setTestBatch] = useState('2026');
   const [testMaxBacklogs, setTestMaxBacklogs] = useState('0');
 
-  const simResult = evaluateEligibility(profile, {
+  const simResult = evaluateEligibility(formData, {
     min_cgpa: parseFloat(testCgpaCutoff) || 0,
     allowed_branches: testBranch.split(',').map((s) => s.trim()),
     batch_years: [parseInt(testBatch, 10)],
     max_active_backlogs: parseInt(testMaxBacklogs, 10),
   });
 
-  const handleSaveProfile = (e: React.FormEvent) => {
+  const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
-    success('Profile Saved', 'Deterministic eligibility engine updated');
+    setIsSaving(true);
+    const ok = await saveProfile(formData);
+    setIsSaving(false);
+    if (ok) {
+      success('Profile Saved to Supabase', 'Eligibility rules across all notices have been refreshed');
+    } else {
+      success('Profile Saved Locally', 'Updated student eligibility parameters');
+    }
   };
 
   return (
@@ -66,7 +69,7 @@ export default function ProfilePage() {
         <div>
           <h1 style={{ fontSize: '24px', fontWeight: 800 }}>Student Placement Profile</h1>
           <p style={{ fontSize: '13.5px', color: 'var(--text-secondary)', marginTop: '4px' }}>
-            Academic credentials used for instant 100% deterministic eligibility evaluation
+            Academic credentials synced directly with Supabase for 100% deterministic eligibility evaluation
           </p>
         </div>
       </div>
@@ -80,9 +83,12 @@ export default function ProfilePage() {
       >
         {/* Profile Edit Form */}
         <div className="glass-card" style={{ padding: '28px' }}>
-          <h2 style={{ fontSize: '17px', fontWeight: 700, marginBottom: '20px' }}>
-            Academic Credentials
-          </h2>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
+            <h2 style={{ fontSize: '17px', fontWeight: 700 }}>
+              Academic Credentials
+            </h2>
+            <Badge variant="eligible">Supabase Synced</Badge>
+          </div>
 
           <form onSubmit={handleSaveProfile}>
             <div className="form-group">
@@ -90,8 +96,18 @@ export default function ProfilePage() {
               <input
                 type="text"
                 className="input-field"
-                value={profile.full_name}
-                onChange={(e) => setProfile({ ...profile, full_name: e.target.value })}
+                value={formData.full_name || ''}
+                onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
+              />
+            </div>
+
+            <div className="form-group">
+              <label className="form-label">College / University Name</label>
+              <input
+                type="text"
+                className="input-field"
+                value={formData.college_name || ''}
+                onChange={(e) => setFormData({ ...formData, college_name: e.target.value })}
               />
             </div>
 
@@ -100,9 +116,9 @@ export default function ProfilePage() {
                 <label className="form-label">Graduation Batch</label>
                 <select
                   className="input-field"
-                  value={profile.graduation_year}
+                  value={formData.graduation_year}
                   onChange={(e) =>
-                    setProfile({ ...profile, graduation_year: parseInt(e.target.value, 10) })
+                    setFormData({ ...formData, graduation_year: parseInt(e.target.value, 10) })
                   }
                 >
                   <option value="2025">2025</option>
@@ -116,8 +132,8 @@ export default function ProfilePage() {
                 <input
                   type="text"
                   className="input-field"
-                  value={profile.branch || 'CSE'}
-                  onChange={(e) => setProfile({ ...profile, branch: e.target.value })}
+                  value={formData.branch || 'CSE'}
+                  onChange={(e) => setFormData({ ...formData, branch: e.target.value })}
                 />
               </div>
             </div>
@@ -129,9 +145,9 @@ export default function ProfilePage() {
                   type="number"
                   step="0.01"
                   className="input-field"
-                  value={profile.cgpa || 8.42}
+                  value={formData.cgpa || 8.42}
                   onChange={(e) =>
-                    setProfile({ ...profile, cgpa: parseFloat(e.target.value) })
+                    setFormData({ ...formData, cgpa: parseFloat(e.target.value) })
                   }
                 />
               </div>
@@ -141,17 +157,23 @@ export default function ProfilePage() {
                 <input
                   type="number"
                   className="input-field"
-                  value={profile.active_backlogs ?? 0}
+                  value={formData.active_backlogs ?? 0}
                   onChange={(e) =>
-                    setProfile({ ...profile, active_backlogs: parseInt(e.target.value, 10) })
+                    setFormData({ ...formData, active_backlogs: parseInt(e.target.value, 10) })
                   }
                 />
               </div>
             </div>
 
             <div style={{ marginTop: '14px' }}>
-              <Button variant="primary" size="md" type="submit" leftIcon={<Save size={16} />}>
-                Save Profile
+              <Button
+                variant="primary"
+                size="md"
+                type="submit"
+                isLoading={isSaving}
+                leftIcon={<Save size={16} />}
+              >
+                Save & Update Eligibility
               </Button>
             </div>
           </form>
@@ -166,7 +188,7 @@ export default function ProfilePage() {
             </h2>
           </div>
           <p style={{ fontSize: '13px', color: 'var(--text-muted)', marginBottom: '20px' }}>
-            Test how different company cutoffs evaluate against your current profile in real time:
+            Simulate how different company placement criteria match against your credentials:
           </p>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>

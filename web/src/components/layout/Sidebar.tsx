@@ -21,6 +21,7 @@ const NAV_ITEMS = [
   { name: 'Placement Feed', href: '/insights', icon: Sparkles },
   { name: 'Deadlines', href: '/deadlines', icon: CalendarClock },
   { name: 'Applications', href: '/applications', icon: KanbanSquare },
+  { name: 'Company Hub', href: '/companies', icon: GraduationCap },
   { name: 'Profile & Criteria', href: '/profile', icon: UserCheck },
   { name: 'AI Assistant', href: '/assistant', icon: BotMessageSquare },
   { name: 'Settings', href: '/settings', icon: Settings },

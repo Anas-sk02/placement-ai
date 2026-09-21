@@ -9,26 +9,17 @@ import {
   Building2,
   Briefcase,
   Layers,
+  CheckCircle2,
 } from 'lucide-react';
 import { InsightCard } from '@/components/insights/InsightCard';
 import { SourceMessageDrawer } from '@/components/insights/SourceMessageDrawer';
 import { ConvertToDeadlineModal } from '@/components/insights/ConvertToDeadlineModal';
 import { Button } from '@/components/ui/Button';
 import { PlacementInsight } from '@/types/insight.types';
-import { StudentProfile } from '@/types/student.types';
-
-const MOCK_PROFILE: StudentProfile = {
-  user_id: 'user-anas-01',
-  full_name: 'Anas Shaikh',
-  degree: 'B.Tech',
-  branch: 'CSE',
-  graduation_year: 2026,
-  cgpa: 8.42,
-  percentage: 86.5,
-  active_backlogs: 0,
-  history_backlogs: 0,
-  skills: ['Java', 'Spring Boot', 'TypeScript', 'Next.js', 'PostgreSQL'],
-};
+import { useStudentProfile } from '@/lib/hooks/useStudentProfile';
+import { useApplications } from '@/lib/hooks/useApplications';
+import { clusterPlacementInsights } from '@/lib/business/clustering';
+import { useToast } from '@/components/ui/Toast';
 
 const ALL_INSIGHTS: PlacementInsight[] = [
   {
@@ -133,13 +124,20 @@ const ALL_INSIGHTS: PlacementInsight[] = [
 ];
 
 export default function InsightsPage() {
+  const { profile } = useStudentProfile();
+  const { addApplication } = useApplications();
+  const { success } = useToast();
+
   const [insights] = useState<PlacementInsight[]>(ALL_INSIGHTS);
   const [selectedType, setSelectedType] = useState<string>('ALL');
   const [searchQuery, setSearchQuery] = useState('');
+  const [enableClustering, setEnableClustering] = useState(false);
   const [selectedRawInsight, setSelectedRawInsight] = useState<PlacementInsight | null>(null);
   const [selectedDeadlineInsight, setSelectedDeadlineInsight] = useState<PlacementInsight | null>(null);
 
-  const filtered = insights.filter((item) => {
+  const displayList = enableClustering ? clusterPlacementInsights(insights) : insights;
+
+  const filtered = displayList.filter((item) => {
     const matchesType = selectedType === 'ALL' || item.opportunity_type === selectedType;
     const matchesSearch =
       item.company_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -147,6 +145,16 @@ export default function InsightsPage() {
       (item.salary_or_stipend && item.salary_or_stipend.toLowerCase().includes(searchQuery.toLowerCase()));
     return matchesType && matchesSearch;
   });
+
+  const handleSaveToKanban = (insight: PlacementInsight) => {
+    addApplication({
+      company_name: insight.company_name,
+      role_title: insight.role_title || 'Software Engineer',
+      status: 'SAVED',
+      notes: `Extracted from Telegram (${insight.group_name || 'TPO Desk'})`,
+    });
+    success('Saved to Application Tracker', `${insight.company_name} is now on your Kanban board`);
+  };
 
   return (
     <div className="page-container">
@@ -164,8 +172,23 @@ export default function InsightsPage() {
         <div>
           <h1 style={{ fontSize: '24px', fontWeight: 800 }}>Placement Opportunities Directory</h1>
           <p style={{ fontSize: '13.5px', color: 'var(--text-secondary)', marginTop: '4px' }}>
-            Structured recruitment notices extracted and verified from Telegram
+            Structured recruitment notices with real-time eligibility evaluation for {profile.full_name} ({profile.branch}, {profile.cgpa} CGPA)
           </p>
+        </div>
+
+        {/* Deduplication / Clustering Toggle */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <span style={{ fontSize: '12.5px', color: 'var(--text-secondary)', fontWeight: 500 }}>
+            Unified Drive Clustering:
+          </span>
+          <label className="switch">
+            <input
+              type="checkbox"
+              checked={enableClustering}
+              onChange={(e) => setEnableClustering(e.target.checked)}
+            />
+            <span className="slider" />
+          </label>
         </div>
       </div>
 
@@ -228,9 +251,10 @@ export default function InsightsPage() {
           <InsightCard
             key={insight.id}
             insight={insight}
-            studentProfile={MOCK_PROFILE}
+            studentProfile={profile}
             onViewRaw={(ins) => setSelectedRawInsight(ins)}
             onTrackDeadline={(ins) => setSelectedDeadlineInsight(ins)}
+            onSaveToKanban={handleSaveToKanban}
           />
         ))}
       </div>

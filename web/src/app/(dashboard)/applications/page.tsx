@@ -10,53 +10,65 @@ import {
   Plus,
   ChevronRight,
   Sparkles,
+  Trash2,
+  FileText,
+  X,
 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
+import { Modal } from '@/components/ui/Modal';
+import { useApplications, ApplicationItem } from '@/lib/hooks/useApplications';
+import { ApplicationStatusEnum } from '@/types/database.types';
 import { useToast } from '@/components/ui/Toast';
 
-type KanbanColumnId = 'SAVED' | 'APPLIED' | 'ASSESSMENT' | 'INTERVIEW' | 'SELECTED' | 'REJECTED';
-
-interface AppCard {
-  id: string;
-  company: string;
-  role: string;
-  ctc: string;
-  deadline?: string;
-  column: KanbanColumnId;
-}
-
-const INITIAL_APPS: AppCard[] = [
-  { id: 'app-01', company: 'Goldman Sachs', role: 'Summer Analyst', ctc: '₹24 - 30 LPA', column: 'APPLIED' },
-  { id: 'app-02', company: 'Amazon', role: 'SDE-1', ctc: '₹44.5 LPA', column: 'SAVED' },
-  { id: 'app-03', company: 'Uber', role: 'SWE Intern', ctc: '₹1.6L/mo', column: 'ASSESSMENT' },
-  { id: 'app-04', company: 'Microsoft', role: 'University Graduate', ctc: '₹51 LPA', column: 'INTERVIEW' },
-  { id: 'app-05', company: 'Atlassian', role: 'Assoc. Engineer', ctc: '₹35 LPA', column: 'SELECTED' },
-];
-
-const COLUMNS: { id: KanbanColumnId; title: string; color: string }[] = [
-  { id: 'SAVED', title: 'Saved Notices', color: '#94a3b8' },
+const COLUMNS: { id: ApplicationStatusEnum; title: string; color: string }[] = [
+  { id: 'SAVED', title: 'Saved Drives', color: '#94a3b8' },
   { id: 'APPLIED', title: 'Applied', color: '#38bdf8' },
-  { id: 'ASSESSMENT', title: 'Online Assessment', color: '#f59e0b' },
+  { id: 'ASSESSMENT', title: 'Online Test (OA)', color: '#f59e0b' },
   { id: 'INTERVIEW', title: 'Interviews', color: '#a855f7' },
   { id: 'SELECTED', title: 'Selected / Offer 🎉', color: '#10b981' },
   { id: 'REJECTED', title: 'Archived', color: '#64748b' },
 ];
 
 export default function ApplicationsKanbanPage() {
+  const { applications, updateApplicationStatus, deleteApplication, addApplication } = useApplications();
   const { success } = useToast();
-  const [apps, setApps] = useState<AppCard[]>(INITIAL_APPS);
 
-  const moveNext = (appId: string, current: KanbanColumnId) => {
-    const order: KanbanColumnId[] = ['SAVED', 'APPLIED', 'ASSESSMENT', 'INTERVIEW', 'SELECTED'];
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [newCompany, setNewCompany] = useState('');
+  const [newRole, setNewRole] = useState('');
+  const [newNotes, setNewNotes] = useState('');
+
+  const [activeNoteApp, setActiveNoteApp] = useState<ApplicationItem | null>(null);
+
+  const moveNext = (appId: string, current: ApplicationStatusEnum) => {
+    const order: ApplicationStatusEnum[] = ['SAVED', 'APPLIED', 'ASSESSMENT', 'INTERVIEW', 'SELECTED'];
     const idx = order.indexOf(current);
     if (idx >= 0 && idx < order.length - 1) {
       const nextCol = order[idx + 1];
-      setApps((prev) =>
-        prev.map((a) => (a.id === appId ? { ...a, column: nextCol } : a))
-      );
-      success('Status Advanced', `Moved to ${nextCol}`);
+      updateApplicationStatus(appId, nextCol);
+      if (nextCol === 'SELECTED') {
+        success('Congratulations! 🎉', `Marked as Selected / Offer for this drive!`);
+      } else {
+        success('Application Advanced', `Moved to ${nextCol}`);
+      }
     }
+  };
+
+  const handleCreateApp = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newCompany) return;
+    addApplication({
+      company_name: newCompany,
+      role_title: newRole || 'Software Engineer',
+      notes: newNotes,
+      status: 'SAVED',
+    });
+    setIsAddModalOpen(false);
+    setNewCompany('');
+    setNewRole('');
+    setNewNotes('');
+    success('Application Added', 'Track your interview progress on the Kanban board');
   };
 
   return (
@@ -73,14 +85,23 @@ export default function ApplicationsKanbanPage() {
         }}
       >
         <div>
-          <h1 style={{ fontSize: '24px', fontWeight: 800 }}>Placement Application Kanban</h1>
+          <h1 style={{ fontSize: '24px', fontWeight: 800 }}>Placement Application Kanban Tracker</h1>
           <p style={{ fontSize: '13.5px', color: 'var(--text-secondary)', marginTop: '4px' }}>
-            Track your recruitment lifecycle from initial Telegram notice to final selection
+            Lifecycle tracker synced with Supabase PostgreSQL • Confetti celebrations on Offer
           </p>
         </div>
+
+        <Button
+          variant="primary"
+          size="md"
+          onClick={() => setIsAddModalOpen(true)}
+          leftIcon={<Plus size={16} />}
+        >
+          Add Application
+        </Button>
       </div>
 
-      {/* Kanban Board Horizontal Columns */}
+      {/* Kanban Columns */}
       <div
         style={{
           display: 'grid',
@@ -90,7 +111,7 @@ export default function ApplicationsKanbanPage() {
         }}
       >
         {COLUMNS.map((col) => {
-          const colApps = apps.filter((a) => a.column === col.id);
+          const colApps = applications.filter((a) => a.status === col.id);
 
           return (
             <div
@@ -100,7 +121,7 @@ export default function ApplicationsKanbanPage() {
                 border: '1px solid var(--border-subtle)',
                 borderRadius: '12px',
                 padding: '16px',
-                minHeight: '400px',
+                minHeight: '450px',
                 display: 'flex',
                 flexDirection: 'column',
                 gap: '12px',
@@ -132,7 +153,7 @@ export default function ApplicationsKanbanPage() {
                 </span>
               </div>
 
-              {/* Cards in this column */}
+              {/* Cards list */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                 {colApps.map((app) => (
                   <div
@@ -144,27 +165,58 @@ export default function ApplicationsKanbanPage() {
                       display: 'flex',
                       flexDirection: 'column',
                       gap: '8px',
+                      borderLeft: `3px solid ${col.color}`,
                     }}
                   >
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                      <strong style={{ fontSize: '14px', color: '#ffffff' }}>{app.company}</strong>
-                      <Badge variant="primary" style={{ fontSize: '9.5px' }}>
-                        {app.ctc}
-                      </Badge>
+                    <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+                      <strong style={{ fontSize: '14px', color: '#ffffff' }}>
+                        {app.company_name}
+                      </strong>
+                      <button
+                        onClick={() => deleteApplication(app.id)}
+                        style={{ color: 'var(--text-muted)', padding: '2px' }}
+                        title="Remove from tracker"
+                      >
+                        <Trash2 size={13} />
+                      </button>
                     </div>
 
-                    <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>{app.role}</div>
+                    <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
+                      {app.role_title}
+                    </div>
+
+                    {app.notes && (
+                      <div
+                        style={{
+                          fontSize: '11.5px',
+                          color: 'var(--text-muted)',
+                          backgroundColor: 'rgba(255, 255, 255, 0.03)',
+                          padding: '6px 8px',
+                          borderRadius: '6px',
+                        }}
+                      >
+                        {app.notes}
+                      </div>
+                    )}
 
                     {col.id !== 'SELECTED' && col.id !== 'REJECTED' && (
-                      <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '6px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '6px', paddingTop: '6px', borderTop: '1px solid var(--border-subtle)' }}>
+                        <button
+                          onClick={() => setActiveNoteApp(app)}
+                          style={{ fontSize: '11px', color: 'var(--primary-light)', display: 'flex', alignItems: 'center', gap: 4 }}
+                        >
+                          <FileText size={12} />
+                          Notes
+                        </button>
+
                         <Button
                           variant="ghost"
                           size="sm"
                           onClick={() => moveNext(app.id, col.id)}
-                          rightIcon={<ChevronRight size={14} />}
-                          style={{ fontSize: '11px', padding: '4px 8px' }}
+                          rightIcon={<ChevronRight size={13} />}
+                          style={{ fontSize: '11px', padding: '3px 8px' }}
                         >
-                          Advance
+                          Next Stage
                         </Button>
                       </div>
                     )}
@@ -175,6 +227,87 @@ export default function ApplicationsKanbanPage() {
           );
         })}
       </div>
+
+      {/* Add Modal */}
+      <Modal isOpen={isAddModalOpen} onClose={() => setIsAddModalOpen(false)} title="Track New Application">
+        <form onSubmit={handleCreateApp} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+          <div className="form-group">
+            <label className="form-label">Company Name</label>
+            <input
+              type="text"
+              required
+              placeholder="e.g. Goldman Sachs, Google"
+              className="input-field"
+              value={newCompany}
+              onChange={(e) => setNewCompany(e.target.value)}
+            />
+          </div>
+
+          <div className="form-group">
+            <label className="form-label">Role Title</label>
+            <input
+              type="text"
+              placeholder="e.g. Summer Analyst / SDE-1"
+              className="input-field"
+              value={newRole}
+              onChange={(e) => setNewRole(e.target.value)}
+            />
+          </div>
+
+          <div className="form-group">
+            <label className="form-label">Application Notes / Round Details</label>
+            <textarea
+              placeholder="e.g. Applied on college form, test on Sunday..."
+              className="input-field"
+              rows={3}
+              value={newNotes}
+              onChange={(e) => setNewNotes(e.target.value)}
+            />
+          </div>
+
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+            <Button variant="ghost" size="md" type="button" onClick={() => setIsAddModalOpen(false)}>
+              Cancel
+            </Button>
+            <Button variant="primary" size="md" type="submit">
+              Save to Board
+            </Button>
+          </div>
+        </form>
+      </Modal>
+
+      {/* Note Edit Modal */}
+      {activeNoteApp && (
+        <Modal isOpen={Boolean(activeNoteApp)} onClose={() => setActiveNoteApp(null)} title={`Notes: ${activeNoteApp.company_name}`}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+            <textarea
+              className="input-field"
+              rows={4}
+              defaultValue={activeNoteApp.notes || ''}
+              id="appNoteInput"
+            />
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+              <Button variant="ghost" size="md" onClick={() => setActiveNoteApp(null)}>
+                Close
+              </Button>
+              <Button
+                variant="primary"
+                size="md"
+                onClick={() => {
+                  const val = (document.getElementById('appNoteInput') as HTMLTextAreaElement)?.value;
+                  if (activeNoteApp) {
+                    addApplication({ ...activeNoteApp, notes: val });
+                  }
+                  setActiveNoteApp(null);
+                  success('Notes Saved', 'Updated application log');
+                }}
+              >
+                Save Notes
+              </Button>
+            </div>
+          </div>
+        </Modal>
+      )}
     </div>
   );
 }
