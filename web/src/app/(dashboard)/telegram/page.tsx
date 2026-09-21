@@ -16,23 +16,53 @@ export default function TelegramManagementPage() {
   const [isSyncing, setIsSyncing] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
-  useEffect(() => {
+  const fetchGroups = () => {
     fetch('/api/telegram/groups')
       .then((res) => (res.ok ? res.json() : { groups: [] }))
       .then((data) => setGroups(data.groups || []))
       .catch(() => setGroups([]));
+  };
+
+  useEffect(() => {
+    fetchGroups();
   }, []);
 
-  const handleToggleMonitor = (groupId: string, currentState: boolean) => {
+  const handleToggleMonitor = async (groupId: string, currentState: boolean) => {
+    const nextState = !currentState;
     setGroups((prev) =>
       prev.map((g) =>
-        g.id === groupId ? { ...g, is_monitored: !currentState } : g
+        g.id === groupId ? { ...g, is_monitored: nextState } : g
       )
     );
-    if (!currentState) {
-      success('Monitoring Enabled', 'Real-time message ingestion activated for this group');
-    } else {
-      info('Monitoring Paused', 'Ingestion temporarily paused');
+
+    try {
+      await fetch('/api/telegram/toggle-monitor', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ groupId, isMonitored: nextState }),
+      });
+      if (nextState) {
+        success('Monitoring Enabled', 'Real-time notice ingestion activated');
+      } else {
+        info('Monitoring Paused', 'Ingestion temporarily paused');
+      }
+    } catch {
+      // rollback on error
+      fetchGroups();
+    }
+  };
+
+  const handleDeleteGroup = async (groupId: string) => {
+    setGroups((prev) => prev.filter((g) => g.id !== groupId));
+    try {
+      const res = await fetch(`/api/telegram/groups?id=${groupId}`, {
+        method: 'DELETE',
+      });
+      if (res.ok) {
+        success('Channel Removed', 'Removed channel from your workspace');
+      }
+    } catch {
+      fetchGroups();
     }
   };
 
@@ -211,7 +241,11 @@ export default function TelegramManagementPage() {
             />
           </div>
 
-          <GroupListTable groups={filteredGroups} onToggleMonitor={handleToggleMonitor} />
+          <GroupListTable
+            groups={filteredGroups}
+            onToggleMonitor={handleToggleMonitor}
+            onDeleteGroup={handleDeleteGroup}
+          />
         </>
       )}
 
@@ -219,9 +253,9 @@ export default function TelegramManagementPage() {
       <TelegramConnectModal
         isOpen={isConnectOpen}
         onClose={() => setIsConnectOpen(false)}
-        onConnected={handleSyncGroups}
-        onAddCustomGroup={(newGroup) => {
-          setGroups((prev) => [newGroup, ...prev]);
+        onConnected={fetchGroups}
+        onAddCustomGroup={() => {
+          fetchGroups();
         }}
       />
     </div>

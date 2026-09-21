@@ -1,18 +1,20 @@
 'use client';
 
 import React from 'react';
-import { Radio, Users, Clock, Send, Check } from 'lucide-react';
+import { Radio, Users, Clock, Send, Check, Trash2 } from 'lucide-react';
 import { TelegramDiscoveredGroup } from '@/types/telegram.types';
 import { Badge } from '../ui/Badge';
 
 export interface GroupListTableProps {
   groups: TelegramDiscoveredGroup[];
   onToggleMonitor: (groupId: string, currentState: boolean) => void;
+  onDeleteGroup?: (groupId: string) => void;
 }
 
 export const GroupListTable: React.FC<GroupListTableProps> = ({
   groups,
   onToggleMonitor,
+  onDeleteGroup,
 }) => {
   return (
     <div
@@ -39,7 +41,8 @@ export const GroupListTable: React.FC<GroupListTableProps> = ({
               <th style={{ padding: '16px 20px' }}>Type</th>
               <th style={{ padding: '16px 20px' }}>Members</th>
               <th style={{ padding: '16px 20px' }}>Last Activity</th>
-              <th style={{ padding: '16px 20px', textAlign: 'right' }}>Active Monitoring</th>
+              <th style={{ padding: '16px 20px', textAlign: 'center' }}>Monitoring</th>
+              {onDeleteGroup && <th style={{ padding: '16px 20px', textAlign: 'right' }}>Actions</th>}
             </tr>
           </thead>
           <tbody>
@@ -103,7 +106,7 @@ export const GroupListTable: React.FC<GroupListTableProps> = ({
                     </div>
                   </td>
 
-                  <td style={{ padding: '16px 20px', textAlign: 'right' }}>
+                  <td style={{ padding: '16px 20px', textAlign: 'center' }}>
                     <label className="switch">
                       <input
                         type="checkbox"
@@ -113,6 +116,31 @@ export const GroupListTable: React.FC<GroupListTableProps> = ({
                       <span className="slider" />
                     </label>
                   </td>
+
+                  {onDeleteGroup && (
+                    <td style={{ padding: '16px 20px', textAlign: 'right' }}>
+                      <button
+                        type="button"
+                        onClick={() => onDeleteGroup(g.id)}
+                        title="Remove Channel"
+                        style={{
+                          background: 'none',
+                          border: 'none',
+                          color: 'var(--text-muted)',
+                          cursor: 'pointer',
+                          padding: '6px',
+                          borderRadius: '6px',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          transition: 'color var(--transition-fast)',
+                        }}
+                        className="hover:text-rose-400"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </td>
+                  )}
                 </tr>
               );
             })}

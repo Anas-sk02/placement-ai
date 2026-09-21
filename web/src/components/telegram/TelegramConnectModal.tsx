@@ -32,30 +32,46 @@ export const TelegramConnectModal: React.FC<TelegramConnectModalProps> = ({
   const [channelUsername, setChannelUsername] = useState('');
   const [channelType, setChannelType] = useState<'CHANNEL' | 'SUPERGROUP'>('CHANNEL');
 
-  const handleAddDirectChannel = (e: React.FormEvent) => {
+  const handleAddDirectChannel = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!channelTitle && !channelUsername) return;
 
-    const cleanUsername = channelUsername.replace('@', '').replace('https://t.me/', '').trim();
-    const newGroup: TelegramDiscoveredGroup = {
-      id: `custom-tg-${Date.now()}`,
-      telegram_id: -1000000000000 - Math.floor(Math.random() * 899999999),
-      title: channelTitle || `@${cleanUsername}` || 'College Placement Cell',
-      username: cleanUsername,
-      chat_type: channelType,
-      total_members: Math.floor(Math.random() * 800) + 200,
-      last_message_at: new Date().toISOString(),
-      last_discovered_at: new Date().toISOString(),
-      is_monitored: true,
-    };
+    setIsLoading(true);
+    try {
+      const res = await fetch('/api/telegram/groups', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: channelTitle,
+          username: channelUsername,
+          chat_type: channelType,
+        }),
+      });
 
-    if (onAddCustomGroup) {
-      onAddCustomGroup(newGroup);
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || 'Failed to connect channel');
+      }
+
+      const data = await res.json();
+      const savedGroup: TelegramDiscoveredGroup = data.group;
+
+      if (onAddCustomGroup) {
+        onAddCustomGroup(savedGroup);
+      }
+      if (onConnected) {
+        onConnected();
+      }
+
+      success('Channel Added & Monitored', `PlaceMint AI will now ingest notices from ${savedGroup.title}`);
+      setChannelTitle('');
+      setChannelUsername('');
+      onClose();
+    } catch (err: any) {
+      error('Failed to Add Channel', err.message || 'Could not save channel to database');
+    } finally {
+      setIsLoading(false);
     }
-    success('Channel Added & Monitoring Active', `PlaceMint AI will now ingest notices from ${newGroup.title}`);
-    setChannelTitle('');
-    setChannelUsername('');
-    onClose();
   };
 
   const handleSendCode = async (e: React.FormEvent) => {
