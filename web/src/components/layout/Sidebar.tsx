@@ -13,6 +13,7 @@ import {
   BotMessageSquare,
   Settings,
   GraduationCap,
+  BarChart3,
 } from 'lucide-react';
 
 const NAV_ITEMS = [
@@ -22,6 +23,7 @@ const NAV_ITEMS = [
   { name: 'Deadlines', href: '/deadlines', icon: CalendarClock },
   { name: 'Applications', href: '/applications', icon: KanbanSquare },
   { name: 'Company Hub', href: '/companies', icon: GraduationCap },
+  { name: 'Analytics & Prep', href: '/analytics', icon: BarChart3 },
   { name: 'Profile & Criteria', href: '/profile', icon: UserCheck },
   { name: 'AI Assistant', href: '/assistant', icon: BotMessageSquare },
   { name: 'Settings', href: '/settings', icon: Settings },
