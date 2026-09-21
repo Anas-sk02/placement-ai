@@ -74,49 +74,76 @@ export async function scrapeTelegramChannel(username: string): Promise<ScrapedTe
     throw new Error('Invalid Telegram channel username');
   }
 
-  const url = `https://t.me/s/${cleanUsername}`;
+  const sUrl = `https://t.me/s/${cleanUsername}`;
+  const directUrl = `https://t.me/${cleanUsername}`;
 
-  const response = await fetch(url, {
-    headers: {
-      'User-Agent':
-        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
-      Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-      'Accept-Language': 'en-US,en;q=0.9',
-    },
-    cache: 'no-store',
-  });
+  const headers = {
+    'User-Agent':
+      'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+    Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+    'Accept-Language': 'en-US,en;q=0.9',
+  };
 
-  if (!response.ok) {
-    throw new Error(`Failed to fetch Telegram channel (HTTP ${response.status})`);
+  // Fetch both sUrl (messages stream) and directUrl (exact profile & subscriber count) in parallel
+  const [sRes, directRes] = await Promise.allSettled([
+    fetch(sUrl, { headers, cache: 'no-store' }),
+    fetch(directUrl, { headers, cache: 'no-store' }),
+  ]);
+
+  let html = '';
+  if (sRes.status === 'fulfilled' && sRes.value.ok) {
+    html = await sRes.value.text();
   }
 
-  const html = await response.text();
+  let directHtml = '';
+  if (directRes.status === 'fulfilled' && directRes.value.ok) {
+    directHtml = await directRes.value.text();
+  }
+
+  const fullHtml = html + '\n' + directHtml;
 
   // 1. Extract Title
   let title = '';
-  const titleMatch = html.match(/<meta property="og:title" content="([^"]+)">/i) ||
-    html.match(/<div class="tgme_page_title"[^>]*><span[^>]*>(.*?)<\/span><\/div>/i);
+  const titleMatch =
+    directHtml.match(/<meta property="og:title" content="([^"]+)">/i) ||
+    directHtml.match(/<div class="tgme_page_title"[^>]*><span[^>]*>(.*?)<\/span><\/div>/i) ||
+    html.match(/<meta property="og:title" content="([^"]+)">/i);
+
   if (titleMatch) {
     title = cleanHtmlToText(titleMatch[1]);
   }
 
   // 2. Extract Description
   let description = '';
-  const descMatch = html.match(/<meta property="og:description" content="([^"]+)">/i) ||
-    html.match(/<div class="tgme_page_description"[^>]*>(.*?)<\/div>/i);
+  const descMatch =
+    directHtml.match(/<meta property="og:description" content="([^"]+)">/i) ||
+    directHtml.match(/<div class="tgme_page_description"[^>]*>(.*?)<\/div>/i) ||
+    html.match(/<meta property="og:description" content="([^"]+)">/i);
+
   if (descMatch) {
     description = cleanHtmlToText(descMatch[1]);
   }
 
-  // 3. Extract Members Count
+  // 3. Extract Exact Members Count
   let membersRaw = '';
   let totalMembers = 0;
-  const extraMatch = html.match(/<div class="tgme_page_extra"[^>]*>(.*?)<\/div>/i) ||
-    html.match(/<div class="tgme_channel_info_counter"[^>]*><span class="counter_value"[^>]*>(.*?)<\/span><span class="counter_type"[^>]*>(.*?)<\/span><\/div>/i);
-  
-  if (extraMatch) {
-    membersRaw = cleanHtmlToText(extraMatch[0]);
+
+  // Try direct page first (e.g. <div class="tgme_page_extra">155 276 subscribers</div>)
+  const directExtraMatch = directHtml.match(/<div class="tgme_page_extra"[^>]*>(.*?)<\/div>/i);
+  if (directExtraMatch) {
+    membersRaw = cleanHtmlToText(directExtraMatch[1]);
     totalMembers = parseMemberCount(membersRaw);
+  }
+
+  // Fallback to counter on s page
+  if (totalMembers === 0) {
+    const sCounterMatch = html.match(
+      /<div class="tgme_channel_info_counter"[^>]*><span class="counter_value"[^>]*>(.*?)<\/span>\s*<span class="counter_type"[^>]*>(.*?)<\/span><\/div>/i
+    );
+    if (sCounterMatch) {
+      membersRaw = `${cleanHtmlToText(sCounterMatch[1])} ${cleanHtmlToText(sCounterMatch[2])}`;
+      totalMembers = parseMemberCount(membersRaw);
+    }
   }
 
   // Fallback title if not found
@@ -124,23 +151,20 @@ export async function scrapeTelegramChannel(username: string): Promise<ScrapedTe
     title = `@${cleanUsername}`;
   }
 
-  // 4. Extract Recent Messages
+  // 4. Extract Recent Messages from s page
   const messages: ScrapedTelegramMessage[] = [];
-  
-  // Regex to match message blocks
-  const msgBlockRegex = /<div class="tgme_widget_message\s+([^"]*)"\s+data-post="([^"]+)"[\s\S]*?(?=<div class="tgme_widget_message\s+|<\/body>|$)/gi;
-  
+  const msgBlockRegex =
+    /<div class="tgme_widget_message\s+([^"]*)"\s+data-post="([^"]+)"[\s\S]*?(?=<div class="tgme_widget_message\s+|<\/body>|$)/gi;
+
   let match: RegExpExecArray | null;
   while ((match = msgBlockRegex.exec(html)) !== null) {
     const blockContent = match[0];
-    const postId = match[2]; // e.g. "username/123"
+    const postId = match[2];
     const messageNum = parseInt(postId.split('/')[1] || '0', 10);
 
-    // Extract text
     const textMatch = blockContent.match(/<div class="tgme_widget_message_text[^"]*"[^>]*>([\s\S]*?)<\/div>/i);
     const rawText = textMatch ? cleanHtmlToText(textMatch[1]) : '';
 
-    // Extract Date
     const dateMatch = blockContent.match(/<time datetime="([^"]+)"/i);
     const date = dateMatch ? dateMatch[1] : new Date().toISOString();
 
