@@ -100,23 +100,24 @@ export const TelegramConnectModal: React.FC<TelegramConnectModalProps> = ({
           type="button"
           onClick={() => setActiveTab('CHANNEL_LINK')}
           style={{
-            flex: 1,
-            padding: '8px 12px',
+            flex: 1.2,
+            padding: '10px 14px',
             borderRadius: '6px',
             border: 'none',
             backgroundColor: activeTab === 'CHANNEL_LINK' ? 'var(--primary)' : 'transparent',
             color: activeTab === 'CHANNEL_LINK' ? '#fff' : 'var(--text-secondary)',
-            fontWeight: 600,
+            fontWeight: 700,
             fontSize: '12.5px',
             cursor: 'pointer',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             gap: '6px',
+            boxShadow: activeTab === 'CHANNEL_LINK' ? '0 2px 8px rgba(99, 102, 241, 0.3)' : 'none',
           }}
         >
           <Link2 size={15} />
-          Add Channel / Link
+          Add Channel Link (Instant) ⭐
         </button>
 
         <button
@@ -124,7 +125,7 @@ export const TelegramConnectModal: React.FC<TelegramConnectModalProps> = ({
           onClick={() => setActiveTab('MTPROTO')}
           style={{
             flex: 1,
-            padding: '8px 12px',
+            padding: '10px 14px',
             borderRadius: '6px',
             border: 'none',
             backgroundColor: activeTab === 'MTPROTO' ? 'var(--primary)' : 'transparent',
@@ -139,7 +140,7 @@ export const TelegramConnectModal: React.FC<TelegramConnectModalProps> = ({
           }}
         >
           <Send size={15} />
-          MTProto Phone Login
+          MTProto Daemon Login
         </button>
       </div>
 
@@ -221,7 +222,7 @@ export const TelegramConnectModal: React.FC<TelegramConnectModalProps> = ({
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px', backgroundColor: 'rgba(56, 189, 248, 0.08)', borderRadius: '10px', border: '1px solid rgba(56, 189, 248, 0.2)' }}>
             <Send size={20} color="#38bdf8" />
             <div style={{ fontSize: '12.5px', color: 'var(--text-secondary)' }}>
-              We use official MTProto client protocol to discover and monitor the college channels you already have access to.
+              MTProto protocol communicates with your background Python worker daemon (<code>worker/main.py</code>). For instant channel monitoring without SMS/OTP setup, use the <strong>Add Channel Link</strong> tab.
             </div>
           </div>
 
