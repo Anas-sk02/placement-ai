@@ -36,16 +36,11 @@ export async function POST(request: Request) {
 
     const noticeContext = (insights && insights.length > 0)
       ? insights.map((ins: any, idx: number) => `Notice #${idx+1}: [${ins.company_name}] Role: ${ins.role_title || 'Software Engineer'}, Type: ${ins.opportunity_type}, CTC: ${ins.salary_or_stipend || 'Competitive'}, Min CGPA: ${ins.min_cgpa ?? 'None'}, Batch: ${ins.batch_year || '2026'}, Deadline: ${ins.deadline_timestamp || 'Closing soon'}, Apply URL: ${ins.application_url || 'N/A'}, Action: ${ins.action_required || 'Register'}`).join('\n')
-      : `Sample Notices:
-Notice #1: [Goldman Sachs] Role: Summer Analyst & Full-Time, CTC: ₹24 - 30 LPA, Min CGPA: 7.5, Batch: 2026, Deadline: Today 6:00 PM, Apply: https://forms.gle/gsachs2026
-Notice #2: [Amazon India] Role: SDE-1, CTC: ₹44.5 LPA, Min CGPA: 7.0, Batch: 2026, Deadline: Tomorrow 11:59 PM, Apply: https://amazon.jobs
-Notice #3: [Uber] Role: SWE Intern, Stipend: ₹1.6L/month, Min CGPA: 8.0, Batch: 2026, Deadline: Friday 6:00 PM, Apply: https://uber.com/careers
-Notice #4: [Microsoft] Role: University Graduate, CTC: ₹51 LPA, Min CGPA: 8.0, Batch: 2026, Deadline: Oct 28
-Notice #5: [Atlassian] Role: Associate Engineer, CTC: ₹35 LPA, Min CGPA: 7.5, Batch: 2026`;
+      : `No placement notices have been ingested or synced yet.`;
 
     const deadlinesContext = (deadlines && deadlines.length > 0)
       ? deadlines.map((d: any) => `Deadline: ${d.company_name} - ${d.title} (At: ${d.deadline_at}, Status: ${d.status})`).join('\n')
-      : `Upcoming Deadlines: Goldman Sachs (Today 6 PM), Amazon India (Tomorrow 11:59 PM), Uber OA (Sunday 10 AM).`;
+      : `No upcoming deadlines currently tracked.`;
 
     const systemPrompt = `You are the PlaceMint Grounded AI Placement Assistant.
 Your mission is to provide concise, 100% accurate, highly actionable placement guidance to the student based STRICTLY on their student profile and the provided college Telegram recruitment notices and deadlines.
@@ -55,6 +50,7 @@ RULES:
 2. If comparing student eligibility, check their actual CGPA and branch against the notice criteria.
 3. Be encouraging, precise, and format responses cleanly with markdown bullet points.
 4. When mentioning a company with an active application link, include the link.
+5. If no notices exist, guide the user to connect their college Telegram group or paste/ingest notices in the Insights tab.
 
 CURRENT CONTEXT:
 ${studentSummary}
@@ -84,7 +80,7 @@ ${deadlinesContext}
         if (replyText) {
           return NextResponse.json({
             reply: replyText,
-            sources: ['TPO Official Placements 2026', 'CSE & IT Placement Cell'],
+            sources: ['Student Profile', 'Active Synced Notices'],
           });
         }
       } catch (err) {
@@ -93,26 +89,27 @@ ${deadlinesContext}
     }
 
     // 3. Grounded Fallback Synthesizer
-    let fallbackReply = `Here is the information from your verified college placement notices:\n\n`;
+    let fallbackReply = '';
     const lower = message.toLowerCase();
 
-    if (lower.includes('goldman') || lower.includes('sachs')) {
-      fallbackReply = `**Goldman Sachs 2026 Campus Drive**:\n• **Role**: Summer Analyst & Engineering Associate\n• **CTC**: ₹24 - 30 LPA (Intern Stipend: ₹1.5L/mo)\n• **Min CGPA**: 7.5 (No active backlogs)\n• **Eligible Branches**: CSE, IT, ECE, EEE\n• **Deadline**: Today, 6:00 PM Sharp\n• **Application Link**: https://forms.gle/gsachs2026campusdrive\n\nWith your **8.42 CGPA**, you are **100% Eligible** to apply.`;
-    } else if (lower.includes('amazon')) {
-      fallbackReply = `**Amazon India SDE-1 Drive**:\n• **Role**: Software Development Engineer (SDE-1)\n• **CTC**: ₹44.5 LPA (Base: ₹18.5L)\n• **Min CGPA**: 7.0 (CSE, IT, ECE)\n• **Deadline**: Tomorrow, 11:59 PM\n• **Portal Link**: https://amazon.jobs/university-recruitment\n\nYou satisfy all academic cutoff criteria.`;
+    if (!insights || insights.length === 0) {
+      fallbackReply = `Welcome to **PlaceMint AI**! You currently do not have any recruitment notices or deadlines synced yet.\n\nTo get started:\n1. **Connect Telegram**: Go to the **Telegram Channels** tab to connect your college placement group.\n2. **Ingest Notices**: Go to **Placement Notices** and click **"+ Ingest Notice with AI"** to analyze any TPO update.\n\nOnce synced, I will automatically calculate your branch and CGPA eligibility across all hiring drives!`;
     } else if (lower.includes('eligible') || lower.includes('qualify') || lower.includes('cutoff')) {
-      fallbackReply = `Based on your profile (**B.Tech CSE, 8.42 CGPA, 0 Backlogs**), you are eligible for:\n\n1. **Microsoft** (₹51 LPA CTC) — Min CGPA: 8.0 ✅\n2. **Amazon India** (₹44.5 LPA CTC) — Min CGPA: 7.0 ✅\n3. **Uber** (₹1.6L/mo Stipend) — Min CGPA: 8.0 ✅\n4. **Atlassian** (₹35 LPA CTC) — Min CGPA: 7.5 ✅\n5. **Goldman Sachs** (₹24 - 30 LPA) — Min CGPA: 7.5 ✅ (Closes Today!)`;
+      const studentCgpa = profile?.cgpa || 8.0;
+      const eligibleList = insights.filter((i: any) => !i.min_cgpa || studentCgpa >= i.min_cgpa);
+      fallbackReply = `Based on your profile (**${profile?.branch || 'Engineering'}, ${studentCgpa} CGPA**), here are your eligible opportunities:\n\n` +
+        eligibleList.map((i: any) => `• **${i.company_name}** (${i.role_title || 'Software Engineer'}) — CTC: ${i.salary_or_stipend || 'Competitive'} (Cutoff: ${i.min_cgpa ?? 'None'})`).join('\n');
     } else if (lower.includes('deadline') || lower.includes('urgent') || lower.includes('today')) {
-      fallbackReply = `🔥 **Urgent Deadlines Expiring Soon**:\n\n• **Goldman Sachs**: Registration closes **Today at 6:00 PM** (3.5 hours remaining)\n• **Amazon India**: SDE-1 Registration closes **Tomorrow at 11:59 PM**\n• **Uber**: Online Coding Assessment scheduled for **Sunday at 10:00 AM**`;
-    } else if (lower.includes('prep') || lower.includes('prepare') || lower.includes('study') || lower.includes('topics')) {
-      fallbackReply = `🎯 **Recommended Placement Preparation Topics**:\n\n1. **Data Structures & Algorithms**: Focus on Trees, Dynamic Programming, and Graph Traversals (frequently asked by Amazon & Goldman Sachs).\n2. **Core CS Fundamentals**: Operating Systems (Concurrency, Deadlocks), DBMS (Indexing, SQL Queries), Computer Networks (TCP/IP, HTTP/2).\n3. **System Design (HLD/LLD)**: Rate Limiters, URL Shortener, Cache design using Redis.`;
+      fallbackReply = (deadlines && deadlines.length > 0)
+        ? `🔥 **Upcoming Deadlines**:\n\n` + deadlines.map((d: any) => `• **${d.company_name}**: ${d.title} (At: ${new Date(d.deadline_at).toLocaleString()})`).join('\n')
+        : `You have no urgent deadlines expiring right now!`;
     } else {
-      fallbackReply = `I'm analyzing your **4 monitored Telegram channels**. You currently have **38 active placement notices** and **2 urgent deadlines today** (Goldman Sachs & Amazon). Would you like me to filter by eligible companies, upcoming tests, or specific roles?`;
+      fallbackReply = `You have **${insights.length} active placement notice(s)** synced. You can ask me about eligible companies, cutoffs, interview rounds, or test preparation!`;
     }
 
     return NextResponse.json({
       reply: fallbackReply,
-      sources: ['TPO Official Placements 2026', 'CSE & IT Placement Cell'],
+      sources: ['Student Profile', 'Placement Database'],
     });
   } catch (err: any) {
     return NextResponse.json({ error: err.message || 'Assistant request failed' }, { status: 500 });

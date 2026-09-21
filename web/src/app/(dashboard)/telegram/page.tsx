@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
-import { Send, Plus, RefreshCw, ShieldCheck, Radio, Search } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Send, Plus, RefreshCw, ShieldCheck, Radio, Search, PlusCircle } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { GroupListTable } from '@/components/telegram/GroupListTable';
@@ -9,59 +9,19 @@ import { TelegramConnectModal } from '@/components/telegram/TelegramConnectModal
 import { TelegramDiscoveredGroup } from '@/types/telegram.types';
 import { useToast } from '@/components/ui/Toast';
 
-const INITIAL_GROUPS: TelegramDiscoveredGroup[] = [
-  {
-    id: 'grp-01',
-    telegram_id: -1001829472910,
-    title: 'TPO Official Placements 2026',
-    username: 'tpo_placements_2026',
-    chat_type: 'CHANNEL',
-    total_members: 2450,
-    last_message_at: new Date(Date.now() - 15 * 60000).toISOString(),
-    last_discovered_at: new Date().toISOString(),
-    is_monitored: true,
-  },
-  {
-    id: 'grp-02',
-    telegram_id: -1001948271048,
-    title: 'CSE & IT Placement Cell (Verified)',
-    username: 'cse_placement_cell',
-    chat_type: 'SUPERGROUP',
-    total_members: 820,
-    last_message_at: new Date(Date.now() - 45 * 60000).toISOString(),
-    last_discovered_at: new Date().toISOString(),
-    is_monitored: true,
-  },
-  {
-    id: 'grp-03',
-    telegram_id: -1001739281940,
-    title: 'Off-Campus Tech Internships & Drives 2026',
-    username: 'offcampus_drives_26',
-    chat_type: 'CHANNEL',
-    total_members: 15400,
-    last_message_at: new Date(Date.now() - 120 * 60000).toISOString(),
-    last_discovered_at: new Date().toISOString(),
-    is_monitored: true,
-  },
-  {
-    id: 'grp-04',
-    telegram_id: -1001628192039,
-    title: 'ECE & Core Engineering Placement Desk',
-    username: 'ece_core_desk',
-    chat_type: 'SUPERGROUP',
-    total_members: 410,
-    last_message_at: new Date(Date.now() - 360 * 60000).toISOString(),
-    last_discovered_at: new Date().toISOString(),
-    is_monitored: true,
-  },
-];
-
 export default function TelegramManagementPage() {
   const { success, info } = useToast();
-  const [groups, setGroups] = useState<TelegramDiscoveredGroup[]>(INITIAL_GROUPS);
+  const [groups, setGroups] = useState<TelegramDiscoveredGroup[]>([]);
   const [isConnectOpen, setIsConnectOpen] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+
+  useEffect(() => {
+    fetch('/api/telegram/groups')
+      .then((res) => (res.ok ? res.json() : { groups: [] }))
+      .then((data) => setGroups(data.groups || []))
+      .catch(() => setGroups([]));
+  }, []);
 
   const handleToggleMonitor = (groupId: string, currentState: boolean) => {
     setGroups((prev) =>
@@ -78,10 +38,15 @@ export default function TelegramManagementPage() {
 
   const handleSyncGroups = () => {
     setIsSyncing(true);
-    setTimeout(() => {
-      setIsSyncing(false);
-      success('Channel Sync Complete', 'Discovered channels are up to date');
-    }, 1200);
+    fetch('/api/telegram/groups')
+      .then((res) => (res.ok ? res.json() : { groups: [] }))
+      .then((data) => {
+        if (data.groups) setGroups(data.groups);
+      })
+      .finally(() => {
+        setIsSyncing(false);
+        success('Channel Sync Complete', 'Channel list refreshed from database');
+      });
   };
 
   const filteredGroups = groups.filter((g) =>
@@ -105,7 +70,7 @@ export default function TelegramManagementPage() {
         <div>
           <h1 style={{ fontSize: '24px', fontWeight: 800 }}>Telegram Channel Hub</h1>
           <p style={{ fontSize: '13.5px', color: 'var(--text-secondary)', marginTop: '4px' }}>
-            Manage MTProto connections and configure which college channels ingest notices
+            Connect and monitor your college placement channels & groups
           </p>
         </div>
 
@@ -117,7 +82,7 @@ export default function TelegramManagementPage() {
             onClick={handleSyncGroups}
             leftIcon={<RefreshCw size={16} />}
           >
-            Sync All Channels
+            Sync Channels
           </Button>
           <Button
             variant="primary"
@@ -125,7 +90,7 @@ export default function TelegramManagementPage() {
             onClick={() => setIsConnectOpen(true)}
             leftIcon={<Plus size={16} />}
           >
-            Connect Telegram Account
+            Connect / Add Channel
           </Button>
         </div>
       </div>
@@ -149,54 +114,106 @@ export default function TelegramManagementPage() {
               width: '44px',
               height: '44px',
               borderRadius: '12px',
-              backgroundColor: 'rgba(16, 185, 129, 0.15)',
-              border: '1px solid rgba(16, 185, 129, 0.3)',
+              backgroundColor: groups.length > 0 ? 'rgba(16, 185, 129, 0.15)' : 'rgba(99, 102, 241, 0.15)',
+              border: groups.length > 0 ? '1px solid rgba(16, 185, 129, 0.3)' : '1px solid rgba(99, 102, 241, 0.3)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
             }}
           >
-            <ShieldCheck size={22} color="var(--status-eligible)" />
+            <ShieldCheck size={22} color={groups.length > 0 ? 'var(--status-eligible)' : 'var(--primary-light)'} />
           </div>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <h3 style={{ fontSize: '15px', fontWeight: 700 }}>
-                MTProto Session Connected (+91 98765 43210)
+                {groups.length > 0 ? `${groups.length} Channels Monitored` : 'No Channels Connected Yet'}
               </h3>
-              <Badge variant="eligible">Encrypted AES-256</Badge>
+              {groups.length > 0 && <Badge variant="eligible">Active Monitoring</Badge>}
             </div>
             <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '2px' }}>
-              Worker Daemon: Render dedicated Python process • Last ping: 4 seconds ago
+              {groups.length > 0
+                ? 'Ingestion Pipeline: Real-time Telegram Listener active'
+                : 'Add your college channel username or invite link to start automatic notice extraction'}
             </div>
           </div>
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <Radio size={14} className="pulse-urgent" color="var(--status-eligible)" />
-          <span style={{ fontSize: '12.5px', color: 'var(--status-eligible)', fontWeight: 600 }}>
-            Live Stream Active
+          <Radio size={14} color={groups.length > 0 ? 'var(--status-eligible)' : 'var(--text-muted)'} />
+          <span style={{ fontSize: '12.5px', color: groups.length > 0 ? 'var(--status-eligible)' : 'var(--text-muted)', fontWeight: 600 }}>
+            {groups.length > 0 ? 'Live Stream Active' : 'Idle'}
           </span>
         </div>
       </div>
 
-      {/* Filter and Table */}
-      <div style={{ marginBottom: '16px', maxWidth: '340px', position: 'relative' }}>
-        <Search
-          size={16}
-          color="var(--text-muted)"
-          style={{ position: 'absolute', left: 14, top: 12 }}
-        />
-        <input
-          type="text"
-          placeholder="Filter discovered groups..."
-          className="input-field"
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          style={{ paddingLeft: '38px' }}
-        />
-      </div>
+      {groups.length === 0 ? (
+        <div
+          className="glass-card"
+          style={{
+            padding: '48px 24px',
+            textAlign: 'center',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '16px',
+          }}
+        >
+          <div
+            style={{
+              width: '56px',
+              height: '56px',
+              borderRadius: '16px',
+              backgroundColor: 'rgba(99, 102, 241, 0.1)',
+              border: '1px solid rgba(99, 102, 241, 0.25)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <Send size={26} color="var(--primary-light)" />
+          </div>
 
-      <GroupListTable groups={filteredGroups} onToggleMonitor={handleToggleMonitor} />
+          <div>
+            <h3 style={{ fontSize: '18px', fontWeight: 700, marginBottom: '6px' }}>
+              No College Channels Connected
+            </h3>
+            <p style={{ fontSize: '13.5px', color: 'var(--text-muted)', maxWidth: '460px', margin: '0 auto' }}>
+              Add your college TPO announcement channels or discussion groups to automatically ingest placement updates.
+            </p>
+          </div>
+
+          <Button
+            variant="primary"
+            size="md"
+            onClick={() => setIsConnectOpen(true)}
+            leftIcon={<PlusCircle size={16} />}
+          >
+            Add Your First Channel
+          </Button>
+        </div>
+      ) : (
+        <>
+          {/* Filter and Table */}
+          <div style={{ marginBottom: '16px', maxWidth: '340px', position: 'relative' }}>
+            <Search
+              size={16}
+              color="var(--text-muted)"
+              style={{ position: 'absolute', left: 14, top: 12 }}
+            />
+            <input
+              type="text"
+              placeholder="Filter discovered groups..."
+              className="input-field"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              style={{ paddingLeft: '38px' }}
+            />
+          </div>
+
+          <GroupListTable groups={filteredGroups} onToggleMonitor={handleToggleMonitor} />
+        </>
+      )}
 
       {/* Telegram Auth Modal */}
       <TelegramConnectModal

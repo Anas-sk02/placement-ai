@@ -26,119 +26,24 @@ import { clusterPlacementInsights } from '@/lib/business/clustering';
 import { parsePlacementMessageFallback } from '@/lib/ai/fallback-rules';
 import { useToast } from '@/components/ui/Toast';
 
-const ALL_INSIGHTS: PlacementInsight[] = [
-  {
-    id: 'ins-01',
-    company_name: 'Goldman Sachs',
-    role_title: 'Summer Analyst & Full-Time Engineer',
-    opportunity_type: 'JOB',
-    batch_year: '2026',
-    salary_or_stipend: '₹24 - 30 LPA (Intern: ₹1.5L/mo)',
-    min_cgpa: 7.5,
-    allowed_branches: ['CSE', 'IT', 'ECE', 'EEE'],
-    registration_deadline: new Date(Date.now() + 3.5 * 3600 * 1000).toISOString(),
-    application_url: 'https://forms.gle/gsachs2026campusdrive',
-    action_required: 'Fill Google Form before 6 PM Sharp',
-    urgency: 'CRITICAL',
-    confidence_score: 0.98,
-    extraction_provider: 'GEMINI',
-    group_name: 'TPO Official Placements 2026',
-  },
-  {
-    id: 'ins-02',
-    company_name: 'Amazon India',
-    role_title: 'Software Development Engineer (SDE-1)',
-    opportunity_type: 'JOB',
-    batch_year: '2026',
-    salary_or_stipend: '₹44.5 LPA (Base: ₹18.5L)',
-    min_cgpa: 7.0,
-    allowed_branches: ['CSE', 'IT', 'ECE'],
-    registration_deadline: new Date(Date.now() + 28 * 3600 * 1000).toISOString(),
-    application_url: 'https://amazon.jobs/university-recruitment',
-    action_required: 'Submit University Profile on Amazon Portal',
-    urgency: 'HIGH',
-    confidence_score: 0.96,
-    extraction_provider: 'GEMINI',
-    group_name: 'CSE & IT Placement Cell (Verified)',
-  },
-  {
-    id: 'ins-03',
-    company_name: 'Uber India',
-    role_title: 'Software Engineering Intern (Summer 2026)',
-    opportunity_type: 'INTERNSHIP',
-    batch_year: '2026',
-    salary_or_stipend: '₹1,60,000 / month',
-    min_cgpa: 8.0,
-    allowed_branches: ['CSE', 'IT'],
-    registration_deadline: new Date(Date.now() + 52 * 3600 * 1000).toISOString(),
-    application_url: 'https://uber.com/careers/internships',
-    action_required: 'Register on HackerRank link sent to college email',
-    urgency: 'MEDIUM',
-    confidence_score: 0.94,
-    extraction_provider: 'RULE_FALLBACK',
-    group_name: 'Off-Campus Tech Internships & Drives 2026',
-  },
-  {
-    id: 'ins-04',
-    company_name: 'Microsoft',
-    role_title: 'Software Engineer - University Graduate',
-    opportunity_type: 'JOB',
-    batch_year: '2026',
-    salary_or_stipend: '₹51 LPA CTC',
-    min_cgpa: 8.0,
-    allowed_branches: ['CSE', 'IT', 'ECE'],
-    registration_deadline: new Date(Date.now() + 90 * 3600 * 1000).toISOString(),
-    application_url: 'https://careers.microsoft.com',
-    urgency: 'MEDIUM',
-    confidence_score: 0.99,
-    extraction_provider: 'GEMINI',
-    group_name: 'TPO Official Placements 2026',
-  },
-  {
-    id: 'ins-05',
-    company_name: 'Atlassian',
-    role_title: 'Associate Software Engineer',
-    opportunity_type: 'JOB',
-    batch_year: '2026',
-    salary_or_stipend: '₹35 LPA CTC',
-    min_cgpa: 7.5,
-    allowed_branches: ['ALL'],
-    registration_deadline: new Date(Date.now() + 120 * 3600 * 1000).toISOString(),
-    application_url: 'https://atlassian.com/careers',
-    urgency: 'LOW',
-    confidence_score: 0.95,
-    extraction_provider: 'GEMINI',
-    group_name: 'Off-Campus Tech Internships & Drives 2026',
-  },
-  {
-    id: 'ins-06',
-    company_name: 'Flipkart Grid 6.0',
-    role_title: 'National Robotics & Software Challenge',
-    opportunity_type: 'HACKATHON',
-    batch_year: '2025 & 2026',
-    salary_or_stipend: 'PPI + ₹5,00,000 Prize Pool',
-    min_cgpa: 0,
-    allowed_branches: ['ALL'],
-    registration_deadline: new Date(Date.now() + 200 * 3600 * 1000).toISOString(),
-    application_url: 'https://unstop.com/competitions/flipkart-grid-60',
-    urgency: 'LOW',
-    confidence_score: 0.93,
-    extraction_provider: 'RULE_FALLBACK',
-    group_name: 'CSE & IT Placement Cell (Verified)',
-  },
-];
-
 export default function InsightsPage() {
   const { profile } = useStudentProfile();
   const { addApplication } = useApplications();
   const { success } = useToast();
 
-  const [insights, setInsights] = useState<PlacementInsight[]>(ALL_INSIGHTS);
+  const [insights, setInsights] = useState<PlacementInsight[]>([]);
   const [selectedType, setSelectedType] = useState<string>('ALL');
   const [searchQuery, setSearchQuery] = useState('');
   const [enableClustering, setEnableClustering] = useState(false);
   const [selectedRawInsight, setSelectedRawInsight] = useState<PlacementInsight | null>(null);
   const [selectedDeadlineInsight, setSelectedDeadlineInsight] = useState<PlacementInsight | null>(null);
+
+  useEffect(() => {
+    fetch('/api/insights')
+      .then((res) => (res.ok ? res.json() : { insights: [] }))
+      .then((data) => setInsights(data.insights || []))
+      .catch(() => setInsights([]));
+  }, []);
 
   // Notice Ingestion State
   const [isIngestModalOpen, setIsIngestModalOpen] = useState(false);
@@ -336,24 +241,72 @@ export default function InsightsPage() {
       </div>
 
       {/* Grid of Insight Cards */}
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))',
-          gap: '20px',
-        }}
-      >
-        {filtered.map((insight) => (
-          <InsightCard
-            key={insight.id}
-            insight={insight}
-            studentProfile={profile}
-            onViewRaw={(ins) => setSelectedRawInsight(ins)}
-            onTrackDeadline={(ins) => setSelectedDeadlineInsight(ins)}
-            onSaveToKanban={handleSaveToKanban}
-          />
-        ))}
-      </div>
+      {filtered.length === 0 ? (
+        <div
+          className="glass-card"
+          style={{
+            padding: '48px 24px',
+            textAlign: 'center',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '16px',
+          }}
+        >
+          <div
+            style={{
+              width: '56px',
+              height: '56px',
+              borderRadius: '16px',
+              backgroundColor: 'rgba(99, 102, 241, 0.1)',
+              border: '1px solid rgba(99, 102, 241, 0.25)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <Sparkles size={28} color="var(--primary-light)" />
+          </div>
+
+          <div>
+            <h3 style={{ fontSize: '18px', fontWeight: 700, marginBottom: '6px' }}>
+              No Placement Notices Ingested Yet
+            </h3>
+            <p style={{ fontSize: '13.5px', color: 'var(--text-muted)', maxWidth: '460px', margin: '0 auto' }}>
+              Paste a recruitment notice or connect your Telegram channels to extract eligibility, CTC, and deadlines.
+            </p>
+          </div>
+
+          <Button
+            variant="primary"
+            size="md"
+            onClick={() => setIsIngestModalOpen(true)}
+            leftIcon={<Plus size={16} />}
+          >
+            Ingest First Notice with AI
+          </Button>
+        </div>
+      ) : (
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))',
+            gap: '20px',
+          }}
+        >
+          {filtered.map((insight) => (
+            <InsightCard
+              key={insight.id}
+              insight={insight}
+              studentProfile={profile}
+              onViewRaw={(ins) => setSelectedRawInsight(ins)}
+              onTrackDeadline={(ins) => setSelectedDeadlineInsight(ins)}
+              onSaveToKanban={handleSaveToKanban}
+            />
+          ))}
+        </div>
+      )}
 
       {/* Raw Drawer */}
       <SourceMessageDrawer

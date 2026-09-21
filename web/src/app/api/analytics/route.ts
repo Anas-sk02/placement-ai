@@ -32,19 +32,32 @@ export interface PlacementAnalyticsData {
 export async function GET() {
   try {
     const supabase = createServerSupabaseClient();
+    const { data: { user } } = await supabase.auth.getUser();
 
-    // Query applications
-    const { data: apps } = await (supabase.from('applications') as any).select('status');
-    const { data: insights } = await (supabase.from('ai_insights') as any).select('opportunity_type, salary_or_stipend');
+    // Query applications scoped to user
+    const { data: apps } = await (supabase.from('applications') as any)
+      .select('status')
+      .eq('user_id', user?.id || '00000000-0000-0000-0000-000000000000');
 
-    const totalNotices = 38;
+    // Query active insights
+    const { data: insights } = await (supabase.from('ai_insights') as any)
+      .select('opportunity_type, salary_or_stipend');
+
+    const insightList = insights || [];
+    const totalNotices = insightList.length;
     const appList = apps || [];
 
-    const savedCount = appList.filter((a: any) => a.status === 'SAVED').length || 6;
-    const appliedCount = appList.filter((a: any) => a.status === 'APPLIED').length || 12;
-    const assessmentCount = appList.filter((a: any) => a.status === 'ASSESSMENT').length || 5;
-    const interviewCount = appList.filter((a: any) => a.status === 'INTERVIEW').length || 3;
-    const selectedCount = appList.filter((a: any) => a.status === 'SELECTED').length || 1;
+    const savedCount = appList.filter((a: any) => a.status === 'SAVED').length;
+    const appliedCount = appList.filter((a: any) => a.status === 'APPLIED').length;
+    const assessmentCount = appList.filter((a: any) => a.status === 'ASSESSMENT').length;
+    const interviewCount = appList.filter((a: any) => a.status === 'INTERVIEW').length;
+    const selectedCount = appList.filter((a: any) => a.status === 'SELECTED').length;
+
+    // Categorize by opportunity type
+    const jobCount = insightList.filter((i: any) => i.opportunity_type === 'FULL_TIME' || i.opportunity_type === 'CAMPUS_DRIVE').length;
+    const internCount = insightList.filter((i: any) => i.opportunity_type === 'INTERNSHIP').length;
+    const hackathonCount = insightList.filter((i: any) => i.opportunity_type === 'HACKATHON').length;
+    const otherCount = insightList.filter((i: any) => i.opportunity_type === 'OTHER').length;
 
     const data: PlacementAnalyticsData = {
       funnel: {
@@ -56,21 +69,21 @@ export async function GET() {
         offers_received: selectedCount,
       },
       compensation_tiers: {
-        super_dream: 8, // > 30 LPA (Microsoft 51L, Amazon 44.5L, Uber 40L, etc.)
-        dream: 18,      // 15 - 30 LPA (Goldman Sachs 24-30L, Atlassian 35L, etc.)
-        standard: 12,   // < 15 LPA
+        super_dream: 0,
+        dream: 0,
+        standard: 0,
       },
       opportunity_type_breakdown: {
-        job: 24,
-        internship: 8,
-        hackathon: 4,
-        campus_drive: 2,
+        job: jobCount,
+        internship: internCount,
+        hackathon: hackathonCount,
+        campus_drive: otherCount,
       },
       metrics: {
-        average_ctc_lpa: 28.4,
-        highest_ctc_lpa: 51.0,
-        eligibility_qualification_rate: 92,
-        deadline_adherence_rate: 96,
+        average_ctc_lpa: 0,
+        highest_ctc_lpa: 0,
+        eligibility_qualification_rate: totalNotices > 0 ? 100 : 0,
+        deadline_adherence_rate: 100,
       },
     };
 

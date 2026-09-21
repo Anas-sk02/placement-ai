@@ -18,6 +18,8 @@ import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { Modal } from '@/components/ui/Modal';
+import { useStudentProfile } from '@/lib/hooks/useStudentProfile';
+import { useApplications } from '@/lib/hooks/useApplications';
 
 interface PrepGuide {
   company: string;
@@ -78,25 +80,57 @@ const PREP_GUIDES: PrepGuide[] = [
     role: 'SWE Intern (Summer 2026)',
     ctc: '₹1.6L/mo Stipend',
     rounds: [
-      'Round 1: CodeSignal General Coding Assessment (4 questions)',
-      'Round 2: Live Coding & Algorithm Optimization',
-      'Round 3: Problem Solving & Design Discussion',
+      'Round 1: HackerRank Assessment (70 mins, 3 questions)',
+      'Round 2: Data Structures & Algorithms (Greedy, Sliding Window)',
+      'Round 3: System Design Fundamentals & Concurrency',
+      'Round 4: Hiring Manager & Values Fit',
     ],
     focusTopics: [
-      'Trie & Prefix Trees (Auto-complete algorithms)',
-      'Interval Scheduling & Sliding Window',
-      'Concurrency & Multi-threading in Java/C++',
-      'Geospatial Indexing concepts (QuadTree/H3)',
+      'Sliding Window & Two Pointers',
+      'Concurrency & Multi-threaded safe queues',
+      'Microservices architecture basics',
+      'Low Latency System Design',
     ],
     recommendedPractice: [
-      'LeetCode: Word Search II, Course Schedule',
-      'Design Hit Counter, Design Rate Limiter',
+      'LeetCode: Sliding Window Maximum, Task Scheduler',
+      'System Design: Design Rate Limiter, Location Tracking Service',
+    ],
+  },
+  {
+    company: 'Microsoft',
+    role: 'University Graduate (SWE)',
+    ctc: '₹51 LPA CTC',
+    rounds: [
+      'Round 1: Codility Online Assessment',
+      'Round 2: Technical Interview (Trees, Recursion, Dynamic Programming)',
+      'Round 3: Object Oriented Design & Code Quality',
+      'Round 4: Leadership & Engineering Mindset',
+    ],
+    focusTopics: [
+      'Tree Traversals & Graph Algorithms',
+      'Clean Code & SOLID Principles',
+      'Memory Management & Garbage Collection',
+      'Asynchronous Programming (Promises, Async/Await, WebSockets)',
+    ],
+    recommendedPractice: [
+      'LeetCode: Course Schedule, Word Break, Serialize Binary Tree',
+      'Design: Design File System, Design TinyURL',
     ],
   },
 ];
 
 export default function AnalyticsPage() {
+  const { profile } = useStudentProfile();
+  const { applications } = useApplications();
   const [selectedPrepGuide, setSelectedPrepGuide] = useState<PrepGuide | null>(null);
+
+  const totalDrives = applications.length;
+  const appliedCount = applications.filter((a) => ['APPLIED', 'ASSESSMENT', 'INTERVIEW', 'SELECTED'].includes(a.status)).length;
+  const oaCount = applications.filter((a) => ['ASSESSMENT', 'INTERVIEW', 'SELECTED'].includes(a.status)).length;
+  const interviewCount = applications.filter((a) => ['INTERVIEW', 'SELECTED'].includes(a.status)).length;
+  const offerCount = applications.filter((a) => a.status === 'SELECTED').length;
+
+  const getPct = (cnt: number) => (totalDrives > 0 ? Math.round((cnt / totalDrives) * 100) : 0);
 
   return (
     <div className="page-container">
@@ -114,12 +148,12 @@ export default function AnalyticsPage() {
         <div>
           <h1 style={{ fontSize: '24px', fontWeight: 800 }}>Placement Analytics & Preparation Hub</h1>
           <p style={{ fontSize: '13.5px', color: 'var(--text-secondary)', marginTop: '4px' }}>
-            Application conversion funnels, compensation distributions, and tailored company preparation roadmaps
+            Application conversion funnels, benchmark CTC metrics, and tailored company roadmaps
           </p>
         </div>
       </div>
 
-      {/* Snapshot Cards */}
+      {/* 4 Metric Highlights */}
       <div
         style={{
           display: 'grid',
@@ -130,53 +164,53 @@ export default function AnalyticsPage() {
       >
         <Card hoverable={false}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <span style={{ fontSize: '13px', color: 'var(--text-muted)' }}>Average Package</span>
+            <span style={{ fontSize: '13px', color: 'var(--text-muted)' }}>Tracked Applications</span>
             <TrendingUp size={18} color="var(--status-eligible)" />
           </div>
           <div style={{ fontSize: '28px', fontWeight: 800, marginTop: '8px', color: 'var(--status-eligible)' }}>
-            ₹28.4 LPA
+            {totalDrives} Drives
           </div>
           <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '4px' }}>
-            Across 38 monitored drives
+            Active on your Kanban board
           </div>
         </Card>
 
         <Card hoverable={false}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <span style={{ fontSize: '13px', color: 'var(--text-muted)' }}>Highest Package</span>
+            <span style={{ fontSize: '13px', color: 'var(--text-muted)' }}>Offers Secured</span>
             <Award size={18} color="#ec4899" />
           </div>
           <div style={{ fontSize: '28px', fontWeight: 800, marginTop: '8px', color: '#ec4899' }}>
-            ₹51.0 LPA
+            {offerCount} {offerCount === 1 ? 'Offer' : 'Offers'}
           </div>
           <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '4px' }}>
-            Microsoft University Graduate
+            {offerCount > 0 ? 'Congratulations! 🎉' : 'In active recruitment cycles'}
           </div>
         </Card>
 
         <Card hoverable={false}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <span style={{ fontSize: '13px', color: 'var(--text-muted)' }}>Eligibility Rate</span>
+            <span style={{ fontSize: '13px', color: 'var(--text-muted)' }}>Placement Profile</span>
             <Target size={18} color="var(--primary-light)" />
           </div>
           <div style={{ fontSize: '28px', fontWeight: 800, marginTop: '8px', color: 'var(--primary-light)' }}>
-            92% Qualified
+            {profile.cgpa || 8.0} CGPA
           </div>
           <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '4px' }}>
-            With 8.42 CGPA (CSE)
+            {profile.branch || 'CSE'} Batch of {profile.graduation_year || 2028}
           </div>
         </Card>
 
         <Card hoverable={false}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <span style={{ fontSize: '13px', color: 'var(--text-muted)' }}>On-Time Submissions</span>
+            <span style={{ fontSize: '13px', color: 'var(--text-muted)' }}>Interview Conversion</span>
             <Clock size={18} color="var(--status-info)" />
           </div>
           <div style={{ fontSize: '28px', fontWeight: 800, marginTop: '8px', color: 'var(--status-info)' }}>
-            96% On-Time
+            {getPct(interviewCount)}% Rate
           </div>
           <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '4px' }}>
-            Zero missed deadlines
+            {interviewCount} Advanced to Technical/HR
           </div>
         </Card>
       </div>
@@ -198,16 +232,16 @@ export default function AnalyticsPage() {
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
             {[
-              { label: 'Discovered Telegram Notices', count: 38, pct: 100, color: 'var(--primary)' },
-              { label: 'Applied on Form / Portal', count: 12, pct: 31, color: '#38bdf8' },
-              { label: 'Online Assessments (OA)', count: 5, pct: 13, color: '#f59e0b' },
-              { label: 'Technical Interviews', count: 3, pct: 8, color: '#a855f7' },
-              { label: 'Offers Received 🎉', count: 1, pct: 3, color: '#10b981' },
+              { label: 'Tracked on Kanban', count: totalDrives, pct: 100, color: 'var(--primary)' },
+              { label: 'Applied on Form / Portal', count: appliedCount, pct: getPct(appliedCount), color: '#38bdf8' },
+              { label: 'Online Assessments (OA)', count: oaCount, pct: getPct(oaCount), color: '#f59e0b' },
+              { label: 'Technical Interviews', count: interviewCount, pct: getPct(interviewCount), color: '#a855f7' },
+              { label: 'Offers Received 🎉', count: offerCount, pct: getPct(offerCount), color: '#10b981' },
             ].map((f) => (
               <div key={f.label}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12.5px', marginBottom: '4px' }}>
                   <span style={{ color: 'var(--text-primary)', fontWeight: 500 }}>{f.label}</span>
-                  <strong style={{ color: f.color }}>{f.count} ({f.pct}%)</strong>
+                  <strong style={{ color: f.color }}>{f.count} ({totalDrives > 0 ? f.pct : 0}%)</strong>
                 </div>
                 <div
                   style={{
@@ -220,7 +254,7 @@ export default function AnalyticsPage() {
                 >
                   <div
                     style={{
-                      width: `${Math.max(8, f.pct)}%`,
+                      width: `${totalDrives > 0 ? Math.max(5, f.pct) : 0}%`,
                       height: '100%',
                       backgroundColor: f.color,
                       borderRadius: '999px',
