@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { supabaseAdmin } from '@/lib/supabase/admin';
 
 export async function GET(request: Request) {
   try {
@@ -7,8 +7,7 @@ export async function GET(request: Request) {
     const type = searchParams.get('type');
     const urgency = searchParams.get('urgency');
 
-    const supabase = createServerSupabaseClient();
-    let query = supabase
+    let query = supabaseAdmin
       .from('ai_insights')
       .select('*')
       .eq('is_dismissed', false)

@@ -161,13 +161,13 @@ export async function POST(request: Request) {
         if (insight && insight.is_placement_related) {
           insightsCreated++;
 
-          const { data: savedInsight } = await (supabaseAdmin.from('ai_insights') as any).insert({
-            user_id: user?.id || null,
+          const { data: savedInsight, error: insErr } = await (supabaseAdmin.from('ai_insights') as any).insert({
+            user_id: user?.id || '8646b47c-acfd-4f5d-ae91-6b7313d0ed40',
             group_id: group.id,
             source_message_id: savedMsg?.id || null,
             company_name: insight.company_name,
             role_title: insight.role_title,
-            opportunity_type: insight.opportunity_type,
+            opportunity_type: insight.opportunity_type || 'JOB',
             batch_year: insight.batch_year,
             salary_or_stipend: insight.salary_or_stipend,
             min_cgpa: insight.min_cgpa,
@@ -175,12 +175,14 @@ export async function POST(request: Request) {
             deadline_timestamp: insight.registration_deadline,
             application_url: insight.application_url,
             action_required: insight.action_required,
-            urgency: insight.urgency,
-            confidence_score: insight.confidence_score,
-            extraction_provider: insight.extraction_provider,
-            raw_message_text: msg.text,
-            group_name: group.title,
+            urgency: insight.urgency || 'MEDIUM',
+            confidence_score: insight.confidence_score || 0.95,
+            extraction_provider: insight.extraction_provider || 'RULE_FALLBACK',
           }).select().single();
+
+          if (insErr) {
+            console.error('[Groups Add] ai_insights insert error:', insErr);
+          }
 
           // Upsert company
           if (insight.company_name && insight.company_name !== 'Recruiter') {

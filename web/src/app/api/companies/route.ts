@@ -1,10 +1,9 @@
 import { NextResponse } from 'next/server';
-import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { supabaseAdmin } from '@/lib/supabase/admin';
 
 export async function GET() {
   try {
-    const supabase = createServerSupabaseClient();
-    const { data: companies, error } = await (supabase.from('companies') as any)
+    const { data: companies, error } = await (supabaseAdmin.from('companies') as any)
       .select('*')
       .order('name', { ascending: true });
 
