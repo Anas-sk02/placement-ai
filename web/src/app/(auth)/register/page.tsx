@@ -39,7 +39,11 @@ export default function RegisterPage() {
       });
 
       if (error) {
-        setErrorMsg(error.message);
+        if (error.message.toLowerCase().includes('rate limit')) {
+          setErrorMsg('Supabase email rate limit reached. Tip: In Supabase Dashboard -> Authentication -> Providers -> Email, turn OFF "Confirm email" to enable instant signups without rate limits.');
+        } else {
+          setErrorMsg(error.message);
+        }
         return;
       }
 
