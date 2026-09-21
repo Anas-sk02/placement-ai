@@ -288,7 +288,7 @@ export default function LandingPage() {
 
                 <div>
                   <span style={{ color: 'var(--text-muted)' }}>Deadline: </span>
-                  <strong style={{ color: 'var(--status-urgent)' }}>
+                  <strong style={{ color: 'var(--status-urgent)' }} suppressHydrationWarning>
                     {extractedData.registration_deadline
                       ? new Date(extractedData.registration_deadline).toLocaleString()
                       : 'Closing Soon'}

@@ -167,7 +167,7 @@ export const SourceMessageDrawer: React.FC<SourceMessageDrawerProps> = ({
 
               <div style={{ backgroundColor: 'rgba(13, 17, 30, 0.8)', padding: '10px 12px', borderRadius: '8px', border: '1px solid var(--border-subtle)' }}>
                 <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Deadline</div>
-                <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--status-urgent)' }}>
+                <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--status-urgent)' }} suppressHydrationWarning>
                   {insight.registration_deadline
                     ? new Date(insight.registration_deadline).toLocaleDateString()
                     : 'Check Notice'}

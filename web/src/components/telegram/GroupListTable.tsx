@@ -88,14 +88,14 @@ export const GroupListTable: React.FC<GroupListTableProps> = ({
                   <td style={{ padding: '16px 20px', color: 'var(--text-secondary)' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                       <Users size={14} color="var(--text-muted)" />
-                      <span>{g.total_members ? g.total_members.toLocaleString() : '—'}</span>
+                      <span suppressHydrationWarning>{g.total_members ? g.total_members.toLocaleString() : '—'}</span>
                     </div>
                   </td>
 
                   <td style={{ padding: '16px 20px', color: 'var(--text-muted)', fontSize: '12px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                       <Clock size={14} />
-                      <span>
+                      <span suppressHydrationWarning>
                         {g.last_message_at
                           ? new Date(g.last_message_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
                           : 'Just now'}

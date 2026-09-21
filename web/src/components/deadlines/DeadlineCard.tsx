@@ -82,7 +82,7 @@ export const DeadlineCard: React.FC<DeadlineCardProps> = ({ deadline, onComplete
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
               <Clock size={13} />
-              <span>
+              <span suppressHydrationWarning>
                 {new Date(deadline.deadline_at).toLocaleDateString(undefined, {
                   month: 'short',
                   day: 'numeric',

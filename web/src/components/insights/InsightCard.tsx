@@ -144,7 +144,7 @@ export const InsightCard: React.FC<InsightCardProps> = ({
 
         <div>
           <div style={{ color: 'var(--text-muted)', fontSize: '11px' }}>Deadline</div>
-          <div style={{ fontWeight: 700, color: 'var(--status-urgent)' }}>
+          <div style={{ fontWeight: 700, color: 'var(--status-urgent)' }} suppressHydrationWarning>
             {insight.registration_deadline
               ? new Date(insight.registration_deadline).toLocaleDateString(undefined, {
                   month: 'short',
