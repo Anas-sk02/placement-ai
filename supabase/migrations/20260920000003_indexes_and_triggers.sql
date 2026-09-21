@@ -56,27 +56,40 @@ CREATE TRIGGER trigger_update_applications
     BEFORE UPDATE ON applications
     FOR EACH ROW EXECUTE FUNCTION update_timestamp_column();
 
--- Trigger Function: Auto-provision profile & preferences on auth signup
-CREATE OR REPLACE FUNCTION handle_new_user_signup()
-RETURNS TRIGGER AS $$
+-- Trigger Function:-- Auto-provision Profile on Signup Trigger (Safe & Bulletproof)
+CREATE OR REPLACE FUNCTION public.handle_new_user_signup()
+RETURNS TRIGGER 
+SECURITY DEFINER
+SET search_path = public
+AS $$
 BEGIN
-    INSERT INTO student_profiles (user_id, full_name, graduation_year)
+    INSERT INTO public.student_profiles (
+        user_id,
+        full_name,
+        graduation_year,
+        branch,
+        college_name
+    )
     VALUES (
         NEW.id,
-        COALESCE(NEW.raw_user_meta_data->>'full_name', 'Student User'),
-        EXTRACT(YEAR FROM NOW())::INT
+        COALESCE(NULLIF(NEW.raw_user_meta_data->>'full_name', ''), 'Student User'),
+        COALESCE(NULLIF(NEW.raw_user_meta_data->>'graduation_year', '')::INT, EXTRACT(YEAR FROM NOW())::INT),
+        COALESCE(NULLIF(NEW.raw_user_meta_data->>'branch', ''), 'CSE'),
+        COALESCE(NULLIF(NEW.raw_user_meta_data->>'college_name', ''), 'Engineering College')
     )
     ON CONFLICT (user_id) DO NOTHING;
 
-    INSERT INTO student_preferences (user_id)
+    INSERT INTO public.student_preferences (user_id)
     VALUES (NEW.id)
     ON CONFLICT (user_id) DO NOTHING;
 
     RETURN NEW;
+EXCEPTION WHEN OTHERS THEN
+    RETURN NEW;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql;
 
 DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 CREATE TRIGGER on_auth_user_created
     AFTER INSERT ON auth.users
-    FOR EACH ROW EXECUTE FUNCTION handle_new_user_signup();
+    FOR EACH ROW EXECUTE FUNCTION public.handle_new_user_signup();
