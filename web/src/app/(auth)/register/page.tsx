@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { GraduationCap, ArrowRight, Lock, Mail, User, BookOpen } from 'lucide-react';
+import { GraduationCap, ArrowRight, Lock, Mail, User, AlertCircle, PlayCircle } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { createClient } from '@/lib/supabase/client';
 
@@ -13,16 +13,19 @@ export default function RegisterPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [graduationYear, setGraduationYear] = useState('2026');
-  const [branch, setBranch] = useState('Computer Science Engineering (CSE)');
+  const [branch, setBranch] = useState('CSE');
+  const [collegeName, setCollegeName] = useState('');
   const [loading, setLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    setErrorMsg(null);
 
     try {
       const supabase = createClient();
-      await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
@@ -30,12 +33,44 @@ export default function RegisterPage() {
             full_name: fullName,
             graduation_year: parseInt(graduationYear, 10),
             branch,
+            college_name: collegeName || 'Engineering College',
           },
         },
       });
-      router.push('/dashboard');
-    } catch {
-      router.push('/dashboard');
+
+      if (error) {
+        setErrorMsg(error.message);
+        return;
+      }
+
+      if (data.user) {
+        // Upsert student profile row
+        try {
+          await (supabase.from('student_profiles') as any).upsert({
+            user_id: data.user.id,
+            full_name: fullName,
+            college_name: collegeName || 'Engineering College',
+            degree: 'B.Tech',
+            branch: branch,
+            graduation_year: parseInt(graduationYear, 10),
+            cgpa: 8.0,
+            percentage: 80.0,
+            active_backlogs: 0,
+            history_backlogs: 0,
+            skills: ['Java', 'Python', 'Web Development'],
+          }, { onConflict: 'user_id' });
+        } catch {
+          // Profile trigger handles it if direct insert is blocked by RLS
+        }
+
+        router.push('/dashboard');
+        router.refresh();
+      } else {
+        router.push('/dashboard');
+        router.refresh();
+      }
+    } catch (err: any) {
+      setErrorMsg(err.message || 'Registration failed. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -55,7 +90,7 @@ export default function RegisterPage() {
         className="glass-card"
         style={{
           width: '100%',
-          maxWidth: '480px',
+          maxWidth: '500px',
           padding: '36px',
         }}
       >
@@ -81,6 +116,26 @@ export default function RegisterPage() {
           </p>
         </div>
 
+        {errorMsg && (
+          <div
+            style={{
+              backgroundColor: 'var(--status-urgent-bg)',
+              border: '1px solid var(--status-urgent-border)',
+              borderRadius: '8px',
+              padding: '12px 14px',
+              display: 'flex',
+              alignItems: 'flex-start',
+              gap: '10px',
+              color: 'var(--status-urgent)',
+              fontSize: '13px',
+              marginBottom: '18px',
+            }}
+          >
+            <AlertCircle size={16} style={{ marginTop: '2px', flexShrink: 0 }} />
+            <span>{errorMsg}</span>
+          </div>
+        )}
+
         <form onSubmit={handleRegister}>
           <div className="form-group">
             <label className="form-label">Full Name</label>
@@ -93,7 +148,7 @@ export default function RegisterPage() {
               <input
                 type="text"
                 required
-                placeholder="Anas Shaikh"
+                placeholder="e.g. Rahul Sharma"
                 className="input-field"
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
@@ -133,6 +188,7 @@ export default function RegisterPage() {
                 <option value="2025">2025 Batch</option>
                 <option value="2026">2026 Batch</option>
                 <option value="2027">2027 Batch</option>
+                <option value="2028">2028 Batch</option>
               </select>
             </div>
 
@@ -149,8 +205,20 @@ export default function RegisterPage() {
                 <option value="EEE">EEE</option>
                 <option value="MECH">MECH</option>
                 <option value="CIVIL">CIVIL</option>
+                <option value="AIDS">AI / Data Science</option>
               </select>
             </div>
+          </div>
+
+          <div className="form-group">
+            <label className="form-label">College / Institute Name (Optional)</label>
+            <input
+              type="text"
+              placeholder="e.g. National Institute of Technology"
+              className="input-field"
+              value={collegeName}
+              onChange={(e) => setCollegeName(e.target.value)}
+            />
           </div>
 
           <div className="form-group">
@@ -164,7 +232,8 @@ export default function RegisterPage() {
               <input
                 type="password"
                 required
-                placeholder="Create secure password"
+                minLength={6}
+                placeholder="Create secure password (min 6 chars)"
                 className="input-field"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -181,7 +250,7 @@ export default function RegisterPage() {
             style={{ width: '100%', marginTop: '10px' }}
             rightIcon={<ArrowRight size={16} />}
           >
-            Create Account
+            Create My Placement Account
           </Button>
         </form>
 

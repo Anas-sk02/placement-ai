@@ -4,9 +4,9 @@ import { useState, useEffect, useCallback } from 'react';
 import { StudentProfile } from '@/types/student.types';
 
 const DEFAULT_PROFILE: StudentProfile = {
-  user_id: 'user-default',
-  full_name: 'Anas Shaikh',
-  college_name: 'Indian Institute of Information Technology',
+  user_id: 'guest',
+  full_name: 'Demo Student',
+  college_name: 'Indian Institute of Technology',
   degree: 'B.Tech',
   branch: 'CSE',
   graduation_year: 2026,
@@ -14,7 +14,7 @@ const DEFAULT_PROFILE: StudentProfile = {
   percentage: 86.5,
   active_backlogs: 0,
   history_backlogs: 0,
-  skills: ['Java', 'Spring Boot', 'TypeScript', 'Next.js', 'PostgreSQL', 'Docker'],
+  skills: ['Java', 'TypeScript', 'Next.js', 'PostgreSQL', 'Docker'],
 };
 
 export function useStudentProfile() {

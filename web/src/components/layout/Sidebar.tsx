@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import {
   LayoutDashboard,
   Send,
@@ -14,7 +14,10 @@ import {
   Settings,
   GraduationCap,
   BarChart3,
+  LogOut,
 } from 'lucide-react';
+import { useStudentProfile } from '@/lib/hooks/useStudentProfile';
+import { createClient } from '@/lib/supabase/client';
 
 const NAV_ITEMS = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
@@ -31,6 +34,30 @@ const NAV_ITEMS = [
 
 export const Sidebar: React.FC = () => {
   const pathname = usePathname();
+  const router = useRouter();
+  const { profile } = useStudentProfile();
+
+  const handleSignOut = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    try {
+      const supabase = createClient();
+      await supabase.auth.signOut();
+      router.push('/login');
+      router.refresh();
+    } catch {
+      router.push('/login');
+    }
+  };
+
+  const displayName = profile?.full_name || 'Student Account';
+  const displaySubtitle = `${profile?.degree || 'B.Tech'} ${profile?.branch || 'CSE'} • ${profile?.graduation_year || 2026} Batch`;
+  const initials = displayName
+    .split(' ')
+    .filter(Boolean)
+    .map((n) => n[0].toUpperCase())
+    .slice(0, 2)
+    .join('') || 'ST';
 
   return (
     <aside
@@ -148,57 +175,91 @@ export const Sidebar: React.FC = () => {
         })}
       </nav>
 
-      {/* Footer Student Card */}
+      {/* Footer Student Card with dynamic profile & sign out */}
       <div
         style={{
-          padding: '16px 20px',
+          padding: '14px 16px',
           borderTop: '1px solid var(--border-subtle)',
           backgroundColor: 'rgba(255, 255, 255, 0.015)',
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <div
+          <Link
+            href="/profile"
             style={{
-              width: '34px',
-              height: '34px',
-              borderRadius: '50%',
-              backgroundColor: 'rgba(99, 102, 241, 0.25)',
-              border: '1px solid rgba(99, 102, 241, 0.4)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '10px',
+              flex: 1,
+              minWidth: 0,
+              textDecoration: 'none',
+            }}
+          >
+            <div
+              style={{
+                width: '34px',
+                height: '34px',
+                borderRadius: '50%',
+                backgroundColor: 'rgba(99, 102, 241, 0.25)',
+                border: '1px solid rgba(99, 102, 241, 0.4)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontWeight: 700,
+                fontSize: '12px',
+                color: 'var(--primary-light)',
+                flexShrink: 0,
+              }}
+            >
+              {initials}
+            </div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div
+                style={{
+                  fontSize: '13px',
+                  fontWeight: 600,
+                  color: 'var(--text-primary)',
+                  whiteSpace: 'nowrap',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                }}
+              >
+                {displayName}
+              </div>
+              <div
+                style={{
+                  fontSize: '11px',
+                  color: 'var(--text-muted)',
+                  whiteSpace: 'nowrap',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                }}
+              >
+                {displaySubtitle}
+              </div>
+            </div>
+          </Link>
+
+          <button
+            onClick={handleSignOut}
+            title="Sign Out / Switch Account"
+            style={{
+              background: 'transparent',
+              border: 'none',
+              color: 'var(--text-muted)',
+              cursor: 'pointer',
+              padding: '6px',
+              borderRadius: '6px',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              fontWeight: 700,
-              fontSize: '13px',
-              color: 'var(--primary-light)',
+              transition: 'color var(--transition-fast)',
             }}
+            onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--status-urgent)')}
+            onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--text-muted)')}
           >
-            AS
-          </div>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div
-              style={{
-                fontSize: '13px',
-                fontWeight: 600,
-                color: 'var(--text-primary)',
-                whiteSpace: 'nowrap',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-              }}
-            >
-              Anas Shaikh
-            </div>
-            <div
-              style={{
-                fontSize: '11px',
-                color: 'var(--text-muted)',
-                whiteSpace: 'nowrap',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-              }}
-            >
-              B.Tech CSE • 2026 Batch
-            </div>
-          </div>
+            <LogOut size={16} />
+          </button>
         </div>
       </div>
     </aside>

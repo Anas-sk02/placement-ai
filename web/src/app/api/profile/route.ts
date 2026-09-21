@@ -7,12 +7,12 @@ export async function GET() {
     const { data: { user }, error: authError } = await supabase.auth.getUser();
 
     if (authError || !user) {
-      // Fallback default mock profile if unauthenticated
+      // Fallback default sample profile if in demo/unauthenticated mode
       return NextResponse.json({
         profile: {
           user_id: 'guest',
-          full_name: 'Student User',
-          college_name: 'Engineering College',
+          full_name: 'Demo Student',
+          college_name: 'Indian Institute of Technology',
           degree: 'B.Tech',
           branch: 'CSE',
           graduation_year: 2026,
@@ -22,19 +22,41 @@ export async function GET() {
           history_backlogs: 0,
           skills: ['Java', 'Spring Boot', 'TypeScript', 'Next.js', 'PostgreSQL'],
         },
+        authenticated: false,
       });
     }
 
     const { data: profile, error } = await (supabase.from('student_profiles') as any)
       .select('*')
       .eq('user_id', user.id)
-      .single();
+      .maybeSingle();
 
     if (error && error.code !== 'PGRST116') {
       return NextResponse.json({ error: error.message }, { status: 400 });
     }
 
-    return NextResponse.json({ profile });
+    if (!profile) {
+      const meta = user.user_metadata || {};
+      const newProfile = {
+        user_id: user.id,
+        full_name: meta.full_name || user.email?.split('@')[0] || 'Student',
+        college_name: meta.college_name || 'Engineering College',
+        degree: meta.degree || 'B.Tech',
+        branch: meta.branch || 'CSE',
+        graduation_year: meta.graduation_year || 2026,
+        cgpa: 8.0,
+        percentage: 80.0,
+        active_backlogs: 0,
+        history_backlogs: 0,
+        skills: ['Java', 'Python', 'Web Development'],
+        updated_at: new Date().toISOString(),
+      };
+
+      await (supabase.from('student_profiles') as any).upsert(newProfile, { onConflict: 'user_id' });
+      return NextResponse.json({ profile: newProfile, authenticated: true });
+    }
+
+    return NextResponse.json({ profile, authenticated: true });
   } catch (err: any) {
     return NextResponse.json({ error: err.message || 'Internal Server Error' }, { status: 500 });
   }

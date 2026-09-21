@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { GraduationCap, ArrowRight, Lock, Mail, AlertCircle } from 'lucide-react';
+import { GraduationCap, ArrowRight, Lock, Mail, AlertCircle, PlayCircle } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { createClient } from '@/lib/supabase/client';
 
@@ -12,6 +12,7 @@ export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [demoLoading, setDemoLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -21,26 +22,35 @@ export default function LoginPage() {
 
     try {
       const supabase = createClient();
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
       if (error) {
-        // Provide graceful dev bypass if Supabase credentials are placeholder
-        if (email.includes('@')) {
-          router.push('/dashboard');
-          return;
-        }
         setErrorMsg(error.message);
-      } else {
+      } else if (data.session) {
         router.push('/dashboard');
+        router.refresh();
+      } else {
+        setErrorMsg('Unable to sign in. Please verify your email and password.');
       }
-    } catch {
-      // Graceful navigation in dev mode
-      router.push('/dashboard');
+    } catch (err: any) {
+      setErrorMsg(err.message || 'An unexpected error occurred during sign in.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDemoLogin = async () => {
+    setDemoLoading(true);
+    setErrorMsg(null);
+    try {
+      // Direct navigation to dashboard using demo session
+      router.push('/dashboard');
+      router.refresh();
+    } finally {
+      setDemoLoading(false);
     }
   };
 
@@ -91,16 +101,16 @@ export default function LoginPage() {
               backgroundColor: 'var(--status-urgent-bg)',
               border: '1px solid var(--status-urgent-border)',
               borderRadius: '8px',
-              padding: '10px 14px',
+              padding: '12px 14px',
               display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
+              alignItems: 'flex-start',
+              gap: '10px',
               color: 'var(--status-urgent)',
               fontSize: '13px',
               marginBottom: '18px',
             }}
           >
-            <AlertCircle size={16} />
+            <AlertCircle size={16} style={{ marginTop: '2px', flexShrink: 0 }} />
             <span>{errorMsg}</span>
           </div>
         )}
@@ -129,9 +139,6 @@ export default function LoginPage() {
           <div className="form-group">
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
               <label className="form-label">Password</label>
-              <a href="#" style={{ fontSize: '12px', color: 'var(--primary-light)' }}>
-                Forgot?
-              </a>
             </div>
             <div style={{ position: 'relative' }}>
               <Lock
@@ -159,9 +166,38 @@ export default function LoginPage() {
             style={{ width: '100%', marginTop: '10px' }}
             rightIcon={<ArrowRight size={16} />}
           >
-            Sign In to PlaceMint
+            Sign In with Account
           </Button>
         </form>
+
+        {/* Divider */}
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            margin: '20px 0',
+            gap: '12px',
+          }}
+        >
+          <div style={{ flex: 1, height: '1px', backgroundColor: 'var(--border-subtle)' }} />
+          <span style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+            or explore
+          </span>
+          <div style={{ flex: 1, height: '1px', backgroundColor: 'var(--border-subtle)' }} />
+        </div>
+
+        {/* Explicit Demo Account Button */}
+        <Button
+          type="button"
+          variant="secondary"
+          size="md"
+          isLoading={demoLoading}
+          onClick={handleDemoLogin}
+          style={{ width: '100%', borderColor: 'rgba(99, 102, 241, 0.3)' }}
+          leftIcon={<PlayCircle size={16} color="var(--primary-light)" />}
+        >
+          Explore with Demo / Sample Account
+        </Button>
 
         <div
           style={{
