@@ -5,8 +5,15 @@ import { calculateReminders } from '@/lib/business/reminder-scheduler';
 export async function GET() {
   try {
     const supabase = createServerSupabaseClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) {
+      return NextResponse.json({ deadlines: [] });
+    }
+
     const { data: deadlines, error } = await (supabase.from('deadlines') as any)
       .select('*')
+      .eq('user_id', user.id)
       .order('deadline_at', { ascending: true });
 
     if (error) {

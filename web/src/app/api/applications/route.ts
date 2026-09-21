@@ -7,8 +7,13 @@ export async function GET() {
     const supabase = createServerSupabaseClient();
     const { data: { user } } = await supabase.auth.getUser();
 
+    if (!user) {
+      return NextResponse.json({ applications: [] });
+    }
+
     const { data: apps, error } = await (supabase.from('applications') as any)
       .select('*')
+      .eq('user_id', user.id)
       .order('created_at', { ascending: false });
 
     if (error) {

@@ -10,15 +10,20 @@ import {
   Briefcase,
   Layers,
   CheckCircle2,
+  Plus,
+  Send,
+  Zap,
 } from 'lucide-react';
 import { InsightCard } from '@/components/insights/InsightCard';
 import { SourceMessageDrawer } from '@/components/insights/SourceMessageDrawer';
 import { ConvertToDeadlineModal } from '@/components/insights/ConvertToDeadlineModal';
+import { Modal } from '@/components/ui/Modal';
 import { Button } from '@/components/ui/Button';
 import { PlacementInsight } from '@/types/insight.types';
 import { useStudentProfile } from '@/lib/hooks/useStudentProfile';
 import { useApplications } from '@/lib/hooks/useApplications';
 import { clusterPlacementInsights } from '@/lib/business/clustering';
+import { parsePlacementMessageFallback } from '@/lib/ai/fallback-rules';
 import { useToast } from '@/components/ui/Toast';
 
 const ALL_INSIGHTS: PlacementInsight[] = [
@@ -128,12 +133,92 @@ export default function InsightsPage() {
   const { addApplication } = useApplications();
   const { success } = useToast();
 
-  const [insights] = useState<PlacementInsight[]>(ALL_INSIGHTS);
+  const [insights, setInsights] = useState<PlacementInsight[]>(ALL_INSIGHTS);
   const [selectedType, setSelectedType] = useState<string>('ALL');
   const [searchQuery, setSearchQuery] = useState('');
   const [enableClustering, setEnableClustering] = useState(false);
   const [selectedRawInsight, setSelectedRawInsight] = useState<PlacementInsight | null>(null);
   const [selectedDeadlineInsight, setSelectedDeadlineInsight] = useState<PlacementInsight | null>(null);
+
+  // Notice Ingestion State
+  const [isIngestModalOpen, setIsIngestModalOpen] = useState(false);
+  const [rawNoticeInput, setRawNoticeInput] = useState('');
+  const [rawChannelInput, setRawChannelInput] = useState('College Official Placement Desk');
+  const [isAnalyzingNotice, setIsAnalyzingNotice] = useState(false);
+
+  const handleAnalyzeNotice = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!rawNoticeInput.trim()) return;
+
+    setIsAnalyzingNotice(true);
+    try {
+      const res = await fetch('/api/insights/analyze', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          raw_text: rawNoticeInput,
+          group_name: rawChannelInput || 'Custom Ingested Notice',
+        }),
+      });
+
+      let extracted: PlacementInsight;
+      if (res.ok) {
+        const data = await res.json();
+        extracted = data.insight;
+      } else {
+        const fallback = parsePlacementMessageFallback(rawNoticeInput);
+        extracted = {
+          id: `ins-custom-${Date.now()}`,
+          company_name: fallback.company_name,
+          role_title: fallback.role_title,
+          opportunity_type: fallback.opportunity_type,
+          batch_year: fallback.batch_year || `${profile.graduation_year}`,
+          salary_or_stipend: fallback.salary_or_stipend,
+          min_cgpa: fallback.min_cgpa ?? 7.0,
+          allowed_branches: fallback.allowed_branches || ['ALL'],
+          registration_deadline: fallback.registration_deadline || new Date(Date.now() + 48 * 3600 * 1000).toISOString(),
+          application_url: fallback.application_url,
+          action_required: fallback.action_required,
+          urgency: fallback.urgency,
+          confidence_score: 0.95,
+          extraction_provider: 'RULE_FALLBACK',
+          group_name: rawChannelInput || 'Direct Ingestion Desk',
+          raw_message_text: rawNoticeInput,
+        };
+      }
+
+      setInsights((prev) => [extracted, ...prev]);
+      success('Notice Ingested & Analyzed', `Identified drive for ${extracted.company_name}`);
+      setRawNoticeInput('');
+      setIsIngestModalOpen(false);
+    } catch {
+      const fallback = parsePlacementMessageFallback(rawNoticeInput);
+      const extracted: PlacementInsight = {
+        id: `ins-custom-${Date.now()}`,
+        company_name: fallback.company_name,
+        role_title: fallback.role_title,
+        opportunity_type: fallback.opportunity_type,
+        batch_year: fallback.batch_year || `${profile.graduation_year}`,
+        salary_or_stipend: fallback.salary_or_stipend,
+        min_cgpa: fallback.min_cgpa ?? 7.0,
+        allowed_branches: fallback.allowed_branches || ['ALL'],
+        registration_deadline: fallback.registration_deadline || new Date(Date.now() + 48 * 3600 * 1000).toISOString(),
+        application_url: fallback.application_url,
+        action_required: fallback.action_required,
+        urgency: fallback.urgency,
+        confidence_score: 0.9,
+        extraction_provider: 'RULE_FALLBACK',
+        group_name: rawChannelInput || 'Direct Ingestion Desk',
+        raw_message_text: rawNoticeInput,
+      };
+      setInsights((prev) => [extracted, ...prev]);
+      success('Notice Parsed Locally', `Extracted ${extracted.company_name} notice`);
+      setRawNoticeInput('');
+      setIsIngestModalOpen(false);
+    } finally {
+      setIsAnalyzingNotice(false);
+    }
+  };
 
   const displayList = enableClustering ? clusterPlacementInsights(insights) : insights;
 
@@ -176,19 +261,30 @@ export default function InsightsPage() {
           </p>
         </div>
 
-        {/* Deduplication / Clustering Toggle */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <span style={{ fontSize: '12.5px', color: 'var(--text-secondary)', fontWeight: 500 }}>
-            Unified Drive Clustering:
-          </span>
-          <label className="switch">
-            <input
-              type="checkbox"
-              checked={enableClustering}
-              onChange={(e) => setEnableClustering(e.target.checked)}
-            />
-            <span className="slider" />
-          </label>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+          {/* Deduplication / Clustering Toggle */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <span style={{ fontSize: '12.5px', color: 'var(--text-secondary)', fontWeight: 500 }}>
+              Unified Clustering:
+            </span>
+            <label className="switch">
+              <input
+                type="checkbox"
+                checked={enableClustering}
+                onChange={(e) => setEnableClustering(e.target.checked)}
+              />
+              <span className="slider" />
+            </label>
+          </div>
+
+          <Button
+            variant="primary"
+            size="md"
+            onClick={() => setIsIngestModalOpen(true)}
+            leftIcon={<Plus size={16} />}
+          >
+            Ingest & Analyze Notice
+          </Button>
         </div>
       </div>
 
@@ -272,6 +368,78 @@ export default function InsightsPage() {
         onClose={() => setSelectedDeadlineInsight(null)}
         insight={selectedDeadlineInsight}
       />
+
+      {/* Ingest & Analyze Notice Modal */}
+      <Modal
+        isOpen={isIngestModalOpen}
+        onClose={() => setIsIngestModalOpen(false)}
+        title="Ingest & Analyze College Notice with AI"
+      >
+        <form onSubmit={handleAnalyzeNotice} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <div
+            style={{
+              padding: '12px 14px',
+              backgroundColor: 'rgba(99, 102, 241, 0.08)',
+              borderRadius: '10px',
+              border: '1px solid rgba(99, 102, 241, 0.2)',
+              fontSize: '12.5px',
+              color: 'var(--text-secondary)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '10px',
+            }}
+          >
+            <Zap size={18} color="var(--primary-light)" style={{ flexShrink: 0 }} />
+            <span>
+              Paste any raw placement notice. Gemini Flash will extract the company, batch, eligibility criteria, and deadlines.
+            </span>
+          </div>
+
+          <div className="form-group">
+            <label className="form-label">Source Channel / Placement Desk Name</label>
+            <input
+              type="text"
+              placeholder="e.g. Ramdeobaba University TPO Desk"
+              className="input-field"
+              value={rawChannelInput}
+              onChange={(e) => setRawChannelInput(e.target.value)}
+            />
+          </div>
+
+          <div className="form-group">
+            <label className="form-label">Raw Placement Notice Text</label>
+            <textarea
+              required
+              rows={6}
+              placeholder={`📢 Urgent Recruitment Notice — Microsoft 2028 Batch
+Role: Software Engineering Intern
+Eligible: B.Tech CSE, IT with CGPA >= 7.5
+Stipend: ₹1.25L/month
+Deadline: 28th September 2026, 6:00 PM
+Apply: https://careers.microsoft.com/students`}
+              className="input-field"
+              value={rawNoticeInput}
+              onChange={(e) => setRawNoticeInput(e.target.value)}
+              style={{ fontFamily: 'inherit', resize: 'vertical' }}
+            />
+          </div>
+
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '6px' }}>
+            <Button variant="ghost" size="md" type="button" onClick={() => setIsIngestModalOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              variant="primary"
+              size="md"
+              type="submit"
+              isLoading={isAnalyzingNotice}
+              leftIcon={<Sparkles size={16} />}
+            >
+              Extract & Add to Feed
+            </Button>
+          </div>
+        </form>
+      </Modal>
     </div>
   );
 }

@@ -28,7 +28,7 @@ const DEFAULT_APPS: ApplicationItem[] = [
 ];
 
 export function useApplications() {
-  const [applications, setApplications] = useState<ApplicationItem[]>(DEFAULT_APPS);
+  const [applications, setApplications] = useState<ApplicationItem[]>([]);
   const [loading, setLoading] = useState(true);
 
   const fetchApplications = useCallback(async () => {
@@ -36,12 +36,11 @@ export function useApplications() {
       const res = await fetch('/api/applications');
       if (res.ok) {
         const data = await res.json();
-        if (data.applications && data.applications.length > 0) {
-          setApplications(data.applications);
-        }
+        setApplications(data.applications || []);
       }
     } catch {
-      // Keep defaults
+      // Fallback empty list
+      setApplications([]);
     } finally {
       setLoading(false);
     }

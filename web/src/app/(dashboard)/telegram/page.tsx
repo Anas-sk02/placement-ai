@@ -203,6 +203,9 @@ export default function TelegramManagementPage() {
         isOpen={isConnectOpen}
         onClose={() => setIsConnectOpen(false)}
         onConnected={handleSyncGroups}
+        onAddCustomGroup={(newGroup) => {
+          setGroups((prev) => [newGroup, ...prev]);
+        }}
       />
     </div>
   );
