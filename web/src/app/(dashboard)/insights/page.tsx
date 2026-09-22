@@ -13,6 +13,7 @@ import {
   Plus,
   Send,
   Zap,
+  RefreshCw,
 } from 'lucide-react';
 import { InsightCard } from '@/components/insights/InsightCard';
 import { SourceMessageDrawer } from '@/components/insights/SourceMessageDrawer';
@@ -37,13 +38,36 @@ export default function InsightsPage() {
   const [enableClustering, setEnableClustering] = useState(false);
   const [selectedRawInsight, setSelectedRawInsight] = useState<PlacementInsight | null>(null);
   const [selectedDeadlineInsight, setSelectedDeadlineInsight] = useState<PlacementInsight | null>(null);
+  const [isSyncing, setIsSyncing] = useState(false);
 
-  useEffect(() => {
+  const fetchInsights = () => {
     fetch('/api/insights')
       .then((res) => (res.ok ? res.json() : { insights: [] }))
       .then((data) => setInsights(data.insights || []))
       .catch(() => setInsights([]));
+  };
+
+  useEffect(() => {
+    fetchInsights();
   }, []);
+
+  const handleSyncChannels = async () => {
+    setIsSyncing(true);
+    try {
+      const res = await fetch('/api/telegram/sync', { method: 'POST' });
+      const data = await res.json();
+      fetchInsights();
+      success(
+        'Channels Synced',
+        `Fetched ${data.messages_fetched || 0} messages and extracted ${data.insights_extracted || 0} notices.`
+      );
+    } catch {
+      fetchInsights();
+      success('Sync Complete', 'Notices updated from database');
+    } finally {
+      setIsSyncing(false);
+    }
+  };
 
   // Notice Ingestion State
   const [isIngestModalOpen, setIsIngestModalOpen] = useState(false);
@@ -183,6 +207,16 @@ export default function InsightsPage() {
           </div>
 
           <Button
+            variant="secondary"
+            size="md"
+            isLoading={isSyncing}
+            onClick={handleSyncChannels}
+            leftIcon={<RefreshCw size={16} />}
+          >
+            Sync Channels
+          </Button>
+
+          <Button
             variant="primary"
             size="md"
             onClick={() => setIsIngestModalOpen(true)}
@@ -320,6 +354,7 @@ export default function InsightsPage() {
         isOpen={Boolean(selectedDeadlineInsight)}
         onClose={() => setSelectedDeadlineInsight(null)}
         insight={selectedDeadlineInsight}
+        onSuccess={fetchInsights}
       />
 
       {/* Ingest & Analyze Notice Modal */}

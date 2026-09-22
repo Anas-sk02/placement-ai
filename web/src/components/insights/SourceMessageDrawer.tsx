@@ -117,7 +117,7 @@ export const SourceMessageDrawer: React.FC<SourceMessageDrawerProps> = ({
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
               <span style={{ color: 'var(--text-muted)' }}>Telegram Channel:</span>
               <strong style={{ color: 'var(--text-primary)' }}>
-                {insight.group_name || 'TPO Official 2026'}
+                {insight.group_name || 'Telegram Channel'}
               </strong>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>

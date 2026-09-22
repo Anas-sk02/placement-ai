@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { extractPlacementInsight } from '@/lib/ai/extractor';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { supabaseAdmin } from '@/lib/supabase/admin';
 
 export async function POST(request: Request) {
   try {

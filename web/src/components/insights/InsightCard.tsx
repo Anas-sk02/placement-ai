@@ -164,7 +164,7 @@ export const InsightCard: React.FC<InsightCardProps> = ({
           <span>{insight.allowed_branches?.join(', ') || 'All Engineering Branches'}</span>
         </div>
         <div style={{ color: 'var(--text-muted)', fontSize: '11px' }}>
-          Source: {insight.group_name || 'TPO Official'}
+          Source: {insight.group_name || 'Telegram Channel'}
         </div>
       </div>
 

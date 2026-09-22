@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import crypto from 'crypto';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { supabaseAdmin } from '@/lib/supabase/admin';
 import { scrapeTelegramChannel } from '@/lib/telegram/channel-scraper';
@@ -67,7 +68,7 @@ export async function POST(request: Request) {
 
     const cleanUsername = (username || '')
       .replace(/^@/, '')
-      .replace(/^https?:\/\/t\.me\/(s\/)?/, '')
+      .replace(/^(https?:\/\/)?(www\.)?t\.me\/(s\/)?/i, '')
       .split('/')[0]
       .split('?')[0]
       .trim();
@@ -139,17 +140,23 @@ export async function POST(request: Request) {
 
     // Process and extract recent messages in background / immediately
     let insightsCreated = 0;
-    for (const msg of recentMessages.slice(0, 10)) {
+    for (const msg of recentMessages.slice(0, 15)) {
       try {
+        const msgHash = crypto
+          .createHash('sha256')
+          .update(`${group.id}:${msg.message_id}:${msg.text}`)
+          .digest('hex');
+
         // Save message
         const { data: savedMsg } = await (supabaseAdmin.from('telegram_messages') as any)
           .upsert(
             {
               group_id: group.id,
               telegram_message_id: msg.message_id,
-              raw_text: msg.text,
-              sent_at: msg.date,
-              has_media: msg.has_link,
+              message_text: msg.text,
+              message_timestamp: msg.date,
+              message_hash: msgHash,
+              has_links: msg.has_link,
             },
             { onConflict: 'group_id,telegram_message_id' }
           )
@@ -159,6 +166,21 @@ export async function POST(request: Request) {
         // Run AI Extraction
         const insight = await extractPlacementInsight(msg.text, msg.date);
         if (insight && insight.is_placement_related) {
+          const { data: existingInsights } = await (supabaseAdmin.from('ai_insights') as any)
+            .select('id')
+            .eq('group_id', group.id)
+            .eq('company_name', insight.company_name)
+            .limit(1);
+
+          if (existingInsights && existingInsights.length > 0) {
+            if (savedMsg?.id) {
+              await (supabaseAdmin.from('ai_insights') as any)
+                .update({ source_message_id: savedMsg.id })
+                .eq('id', existingInsights[0].id);
+            }
+            continue;
+          }
+
           insightsCreated++;
 
           const { data: savedInsight, error: insErr } = await (supabaseAdmin.from('ai_insights') as any).insert({

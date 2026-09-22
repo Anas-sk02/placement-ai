@@ -65,7 +65,7 @@ function cleanHtmlToText(html: string): string {
 export async function scrapeTelegramChannel(username: string): Promise<ScrapedTelegramChannel> {
   const cleanUsername = username
     .replace(/^@/, '')
-    .replace(/^https?:\/\/t\.me\/(s\/)?/, '')
+    .replace(/^(https?:\/\/)?(www\.)?t\.me\/(s\/)?/i, '')
     .split('/')[0]
     .split('?')[0]
     .trim();
@@ -99,8 +99,6 @@ export async function scrapeTelegramChannel(username: string): Promise<ScrapedTe
   if (directRes.status === 'fulfilled' && directRes.value.ok) {
     directHtml = await directRes.value.text();
   }
-
-  const fullHtml = html + '\n' + directHtml;
 
   // 1. Extract Title
   let title = '';
@@ -152,30 +150,67 @@ export async function scrapeTelegramChannel(username: string): Promise<ScrapedTe
   }
 
   // 4. Extract Recent Messages from s page
-  const messages: ScrapedTelegramMessage[] = [];
-  const msgBlockRegex =
-    /<div class="tgme_widget_message\s+([^"]*)"\s+data-post="([^"]+)"[\s\S]*?(?=<div class="tgme_widget_message\s+|<\/body>|$)/gi;
+  function extractMessagesFromHtml(srcHtml: string): ScrapedTelegramMessage[] {
+    const msgs: ScrapedTelegramMessage[] = [];
+    const msgBlockRegex =
+      /<div class="tgme_widget_message\s+([^"]*)"\s+data-post="([^"]+)"[\s\S]*?(?=<div class="tgme_widget_message\s+|<\/body>|$)/gi;
 
-  let match: RegExpExecArray | null;
-  while ((match = msgBlockRegex.exec(html)) !== null) {
-    const blockContent = match[0];
-    const postId = match[2];
-    const messageNum = parseInt(postId.split('/')[1] || '0', 10);
+    let match: RegExpExecArray | null;
+    while ((match = msgBlockRegex.exec(srcHtml)) !== null) {
+      const blockContent = match[0];
+      const postId = match[2];
+      const messageNum = parseInt(postId.split('/')[1] || '0', 10);
 
-    const textMatch = blockContent.match(/<div class="tgme_widget_message_text[^"]*"[^>]*>([\s\S]*?)<\/div>/i);
-    const rawText = textMatch ? cleanHtmlToText(textMatch[1]) : '';
+      const textMatch = blockContent.match(/<div class="tgme_widget_message_text[^"]*"[^>]*>([\s\S]*?)<\/div>/i);
+      const rawText = textMatch ? cleanHtmlToText(textMatch[1]) : '';
 
-    const dateMatch = blockContent.match(/<time datetime="([^"]+)"/i);
-    const date = dateMatch ? dateMatch[1] : new Date().toISOString();
+      const dateMatch = blockContent.match(/<time datetime="([^"]+)"/i);
+      const date = dateMatch ? dateMatch[1] : new Date().toISOString();
 
-    if (rawText && rawText.length >= 10) {
-      messages.push({
-        message_id: messageNum || Date.now(),
-        post_id: postId,
-        text: rawText,
-        date,
-        has_link: rawText.includes('http://') || rawText.includes('https://'),
-      });
+      if (rawText && rawText.length >= 10) {
+        msgs.push({
+          message_id: messageNum || Date.now(),
+          post_id: postId,
+          text: rawText,
+          date,
+          has_link: rawText.includes('http://') || rawText.includes('https://'),
+        });
+      }
+    }
+    return msgs;
+  }
+
+  let messages = extractMessagesFromHtml(html);
+
+  // If 0 messages found on web preview, try fallback aliases (e.g. TechUprise_Updates -> techuprise)
+  if (messages.length === 0) {
+    const aliasCandidates: string[] = [];
+    if (cleanUsername.includes('_')) {
+      aliasCandidates.push(cleanUsername.replace(/_updates$/i, ''));
+      aliasCandidates.push(cleanUsername.replace(/_jobs$/i, ''));
+      aliasCandidates.push(cleanUsername.replace(/_official$/i, ''));
+    }
+    // Check description for referenced t.me links
+    const descHandleMatch = description.match(/(?:t\.me\/|@)([A-Za-z0-9_]{3,32})/i);
+    if (descHandleMatch && descHandleMatch[1].toLowerCase() !== cleanUsername.toLowerCase()) {
+      aliasCandidates.push(descHandleMatch[1]);
+    }
+
+    for (const alias of aliasCandidates) {
+      if (!alias || alias.toLowerCase() === cleanUsername.toLowerCase()) continue;
+      try {
+        const aliasRes = await fetch(`https://t.me/s/${alias}`, { headers, cache: 'no-store' });
+        if (aliasRes.ok) {
+          const aliasHtml = await aliasRes.text();
+          const aliasMsgs = extractMessagesFromHtml(aliasHtml);
+          if (aliasMsgs.length > 0) {
+            messages = aliasMsgs;
+            break;
+          }
+        }
+      } catch {
+        // Continue to next alias candidate
+      }
     }
   }
 

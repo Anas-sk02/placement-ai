@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Search, Bell, Radio, Activity } from 'lucide-react';
+import { Bell, Radio, Activity } from 'lucide-react';
 import Link from 'next/link';
 
 export const Navbar: React.FC = () => {
@@ -21,26 +21,11 @@ export const Navbar: React.FC = () => {
         padding: '0 32px',
       }}
     >
-      {/* Global Search */}
-      <div style={{ position: 'relative', width: '380px' }}>
-        <Search
-          size={16}
-          color="var(--text-muted)"
-          style={{ position: 'absolute', left: 14, top: 12 }}
-        />
-        <input
-          type="text"
-          placeholder="Search companies, roles, CTC, eligibility..."
-          className="input-field"
-          style={{
-            paddingLeft: '38px',
-            paddingTop: '8px',
-            paddingBottom: '8px',
-            fontSize: '13px',
-            borderRadius: '999px',
-            backgroundColor: 'rgba(255, 255, 255, 0.04)',
-          }}
-        />
+      {/* Left Branding / Live Status */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-muted)' }}>
+          PlaceMint AI Placement Intelligence
+        </span>
       </div>
 
       {/* Right Utility Bar */}

@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import crypto from 'crypto';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { supabaseAdmin } from '@/lib/supabase/admin';
 import { scrapeTelegramChannel } from '@/lib/telegram/channel-scraper';
@@ -35,21 +36,36 @@ export async function POST(request: Request) {
     for (const group of groupList) {
       if (!group.username) continue;
 
-      try {
-        const scraped = await scrapeTelegramChannel(group.username);
+      const cleanUsername = group.username
+        .replace(/^@/, '')
+        .replace(/^(https?:\/\/)?(www\.)?t\.me\/(s\/)?/i, '')
+        .split('/')[0]
+        .split('?')[0]
+        .trim();
 
-        // Update real member count and title if needed
+      if (!cleanUsername) continue;
+
+      try {
+        const scraped = await scrapeTelegramChannel(cleanUsername);
+
+        // Update real member count and clean username/title if needed
         await (supabaseAdmin.from('telegram_groups') as any)
           .update({
+            username: cleanUsername,
             total_members: scraped.total_members || group.total_members,
-            title: group.title || scraped.title,
+            title: scraped.title && scraped.title !== `@${cleanUsername}` ? scraped.title : group.title,
             last_message_at: scraped.messages[0]?.date || new Date().toISOString(),
           })
           .eq('id', group.id);
 
         // Process recent messages
-        for (const msg of scraped.messages.slice(0, 10)) {
+        for (const msg of scraped.messages.slice(0, 15)) {
           totalMessagesFetched++;
+
+          const msgHash = crypto
+            .createHash('sha256')
+            .update(`${group.id}:${msg.message_id}:${msg.text}`)
+            .digest('hex');
 
           // 1. Save to telegram_messages
           const { data: savedMsg } = await (supabaseAdmin.from('telegram_messages') as any)
@@ -57,9 +73,10 @@ export async function POST(request: Request) {
               {
                 group_id: group.id,
                 telegram_message_id: msg.message_id,
-                raw_text: msg.text,
-                sent_at: msg.date,
-                has_media: msg.has_link,
+                message_text: msg.text,
+                message_timestamp: msg.date,
+                message_hash: msgHash,
+                has_links: msg.has_link,
               },
               { onConflict: 'group_id,telegram_message_id' }
             )
@@ -70,9 +87,26 @@ export async function POST(request: Request) {
           try {
             const insight = await extractPlacementInsight(msg.text, msg.date);
             if (insight && insight.is_placement_related) {
+              // Deduplicate insight per group + company + role
+              const { data: existingInsights } = await (supabaseAdmin.from('ai_insights') as any)
+                .select('id')
+                .eq('group_id', group.id)
+                .eq('company_name', insight.company_name)
+                .limit(1);
+
+              if (existingInsights && existingInsights.length > 0) {
+                // Update source_message_id if missing
+                if (savedMsg?.id) {
+                  await (supabaseAdmin.from('ai_insights') as any)
+                    .update({ source_message_id: savedMsg.id })
+                    .eq('id', existingInsights[0].id);
+                }
+                continue;
+              }
+
               totalInsightsExtracted++;
 
-              // Save to ai_insights (matching database schema exactly)
+              // Save to ai_insights
               const { data: savedInsight, error: insErr } = await (supabaseAdmin.from('ai_insights') as any).insert({
                 user_id: currentUserId,
                 group_id: group.id,
@@ -97,7 +131,7 @@ export async function POST(request: Request) {
               }
 
               // Save to companies if company name exists
-              if (insight.company_name && insight.company_name !== 'Recruiter') {
+              if (insight.company_name && insight.company_name !== 'Unknown Recruiter' && insight.company_name !== 'Recruiter') {
                 await (supabaseAdmin.from('companies') as any).upsert(
                   {
                     name: insight.company_name,

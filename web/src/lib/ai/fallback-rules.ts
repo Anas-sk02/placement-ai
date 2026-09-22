@@ -17,6 +17,7 @@ export function parsePlacementMessageFallback(
     /placement/i,
     /hiring/i,
     /recruitment/i,
+    /recruiting/i,
     /drive/i,
     /internship/i,
     /stipend/i,
@@ -27,39 +28,83 @@ export function parsePlacementMessageFallback(
     /job\s*role/i,
     /eligibility/i,
     /deadline/i,
-    /apply\s*link/i,
-    /google\s*form/i,
+    /apply/i,
+    /link/i,
+    /form/i,
     /registration/i,
     /assessment/i,
     /interview/i,
+    /grads?/i,
+    /graduat(e|ing|ion)/i,
+    /passout/i,
+    /fresher/i,
+    /engineer/i,
+    /developer/i,
+    /sde\b/i,
+    /opening/i,
+    /batch/i,
+    /https?:\/\//i,
   ];
 
   const matchedKeywords = placementKeywords.filter((re) => re.test(clean));
-  const isPlacement = matchedKeywords.length >= 2;
+  const isPlacement =
+    matchedKeywords.length >= 2 ||
+    /(?:is\s+hiring|hiring|recruitment|campus\s+drive|internship)/i.test(clean);
 
-  // 2. Extract Company Name
+  // 2. Extract Company Name and Role Title
   let companyName = 'Unknown Recruiter';
-  const companyRegexes = [
-    /(?:company|organization|recruiter|firm)\s*[:\-–]\s*([A-Za-z0-9\s&.\(\)]+?)(?:\n|$|,)/i,
-    /(?:hiring|drive\s+for|drive\s+by|recruitment\s+for)\s*[:\-–]?\s*([A-Za-z0-9\s&.\(\)]+?)(?:\n|$|\s+for|\s+is|\s+at)/i,
-    /(?:^|\n)[^\w\n]*\*?([A-Za-z0-9\s&.]{3,35})\*?\s+(?:Recruitment|Hiring|Off-Campus|Campus|Drive|Internship|Summer|202[4-8])/i,
-    /(?:^|\n)[^\w\n]*([A-Za-z0-9\s&.]{3,30})\s*(?:is\s+hiring|off-campus|campus\s+drive|recruitment|virtual\s+drive)/im,
-  ];
+  let roleTitle = 'Software Engineer / Graduate Trainee';
 
-  for (const re of companyRegexes) {
-    const match = clean.match(re);
-    if (match && match[1]?.trim()) {
-      const candidate = match[1].trim().replace(/^[\*\#\-\_\s]+|[\*\#\-\_\s]+$/g, '');
-      if (
-        candidate.length > 2 &&
-        candidate.length < 40 &&
-        !candidate.toLowerCase().includes('dear') &&
-        !candidate.toLowerCase().includes('urgent') &&
-        !candidate.toLowerCase().includes('tpo') &&
-        !candidate.toLowerCase().includes('update')
-      ) {
-        companyName = candidate;
-        break;
+  // Pattern A: "Company is hiring / Hiring Role" (e.g. "Weekday AI is hiring Backend Engineer", "Nike Hiring Software Engineer 1:")
+  const hiringHeaderMatch = clean.match(
+    /(?:^|\n)[^\w\n]*\*?([A-Za-z0-9\s&.\(\)]{2,35}?)\*?\s+(?:is\s+hiring|hiring|is\s+recruiting)\s+(?:for\s+|an?\s+)?([A-Za-z0-9\s\/\-_()]{2,45}?)(?:\n|:|$|\s+for\s+202|\s+location|\s+experience)/im
+  );
+
+  if (hiringHeaderMatch) {
+    const compCandidate = hiringHeaderMatch[1].trim().replace(/^[\*\#\-\_\s]+|[\*\#\-\_\s]+$/g, '');
+    const roleCandidate = hiringHeaderMatch[2].trim().replace(/^[\*\#\-\_\s]+|[\*\#\-\_\s]+$/g, '');
+    if (
+      compCandidate.length >= 2 &&
+      !compCandidate.toLowerCase().includes('dear') &&
+      !compCandidate.toLowerCase().includes('urgent') &&
+      !compCandidate.toLowerCase().includes('apply') &&
+      !compCandidate.toLowerCase().includes('link')
+    ) {
+      companyName = compCandidate;
+    }
+    if (
+      roleCandidate.length >= 2 &&
+      !roleCandidate.toLowerCase().includes('http') &&
+      !roleCandidate.toLowerCase().includes('link')
+    ) {
+      roleTitle = roleCandidate;
+    }
+  }
+
+  // Fallback Company Regexes
+  if (companyName === 'Unknown Recruiter') {
+    const companyRegexes = [
+      /(?:company|organization|recruiter|firm)\s*[:\-–]\s*([A-Za-z0-9\s&.\(\)]+?)(?:\n|$|,)/i,
+      /(?:^|\n)[^\w\n]*\*?([A-Za-z0-9\s&.]{3,35})\*?\s+(?:Recruitment|Hiring|Off-Campus|Campus|Drive|Internship|Summer|202[4-8])/i,
+      /(?:^|\n)[^\w\n]*([A-Za-z0-9\s&.]{3,30})\s*(?:is\s+hiring|off-campus|campus\s+drive|recruitment|virtual\s+drive)/im,
+      /(?:drive\s+for|drive\s+by|recruitment\s+for)\s*[:\-–]?\s*([A-Za-z0-9\s&.\(\)]+?)(?:\n|$|\s+for|\s+is|\s+at)/i,
+    ];
+
+    for (const re of companyRegexes) {
+      const match = clean.match(re);
+      if (match && match[1]?.trim()) {
+        const candidate = match[1].trim().replace(/^[\*\#\-\_\s]+|[\*\#\-\_\s]+$/g, '');
+        if (
+          candidate.length > 2 &&
+          candidate.length < 40 &&
+          !candidate.toLowerCase().includes('dear') &&
+          !candidate.toLowerCase().includes('urgent') &&
+          !candidate.toLowerCase().includes('tpo') &&
+          !candidate.toLowerCase().includes('update')
+        ) {
+          companyName = candidate;
+          break;
+        }
       }
     }
   }
@@ -72,18 +117,19 @@ export function parsePlacementMessageFallback(
     }
   }
 
-  // 3. Extract Role Title
-  let roleTitle = 'Software Engineer / Graduate Trainee';
-  const roleRegexes = [
-    /(?:role|position|profile|designation|job\s*title)\s*[:\-–]\s*([A-Za-z0-9\s\/\-_()]+?)(?:\n|$|,)/i,
-    /(?:hiring\s+for|opening\s+for)\s*[:\-–]?\s*([A-Za-z0-9\s\/\-_()]+?)(?:\n|$|,)/i,
-  ];
+  // 3. Extract Role Title if not already found
+  if (roleTitle === 'Software Engineer / Graduate Trainee') {
+    const roleRegexes = [
+      /(?:role|position|profile|designation|job\s*title)\s*[:\-–]\s*([A-Za-z0-9\s\/\-_()]+?)(?:\n|$|,)/i,
+      /(?:hiring\s+for|opening\s+for)\s*[:\-–]?\s*([A-Za-z0-9\s\/\-_()]+?)(?:\n|$|,)/i,
+    ];
 
-  for (const re of roleRegexes) {
-    const match = clean.match(re);
-    if (match && match[1]?.trim()) {
-      roleTitle = match[1].trim();
-      break;
+    for (const re of roleRegexes) {
+      const match = clean.match(re);
+      if (match && match[1]?.trim()) {
+        roleTitle = match[1].trim();
+        break;
+      }
     }
   }
 

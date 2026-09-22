@@ -9,7 +9,17 @@ export async function GET(request: Request) {
 
     let query = supabaseAdmin
       .from('ai_insights')
-      .select('*')
+      .select(`
+        *,
+        telegram_groups (
+          title,
+          username
+        ),
+        telegram_messages (
+          message_text,
+          message_timestamp
+        )
+      `)
       .eq('is_dismissed', false)
       .order('created_at', { ascending: false });
 
@@ -26,7 +36,18 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: error.message }, { status: 400 });
     }
 
-    return NextResponse.json({ insights: insights || [] });
+    const formatted = (insights || []).map((ins: any) => ({
+      ...ins,
+      group_name:
+        ins.telegram_groups?.title ||
+        (ins.telegram_groups?.username ? `@${ins.telegram_groups.username}` : 'Telegram Channel'),
+      raw_message_text:
+        ins.telegram_messages?.message_text ||
+        ins.eligibility_raw ||
+        `${ins.company_name} placement opportunity announced on ${ins.telegram_groups?.title || 'Telegram'}`,
+    }));
+
+    return NextResponse.json({ insights: formatted });
   } catch (err: any) {
     return NextResponse.json({ error: err.message || 'Internal Server Error' }, { status: 500 });
   }

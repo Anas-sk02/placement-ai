@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { CalendarClock, Bell, Check, ArrowRight } from 'lucide-react';
 import { Modal } from '../ui/Modal';
 import { Button } from '../ui/Button';
@@ -20,10 +20,26 @@ export const ConvertToDeadlineModal: React.FC<ConvertToDeadlineModalProps> = ({
   insight,
   onSuccess,
 }) => {
-  const { success } = useToast();
+  const { success, error } = useToast();
   const [offsets, setOffsets] = useState<number[]>([24, 6, 1]);
   const [customTitle, setCustomTitle] = useState('');
+  const [customDate, setCustomDate] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (insight) {
+      setCustomTitle(
+        insight.role_title
+          ? `${insight.company_name} — ${insight.role_title}`
+          : `${insight.company_name} Application Deadline`
+      );
+
+      const defaultDeadline = insight.registration_deadline
+        ? new Date(insight.registration_deadline).toISOString().slice(0, 16)
+        : new Date(Date.now() + 86400000).toISOString().slice(0, 16);
+      setCustomDate(defaultDeadline);
+    }
+  }, [insight]);
 
   const toggleOffset = (val: number) => {
     setOffsets((prev) =>
@@ -31,17 +47,48 @@ export const ConvertToDeadlineModal: React.FC<ConvertToDeadlineModalProps> = ({
     );
   };
 
-  const handleSaveDeadline = () => {
+  const handleSaveDeadline = async () => {
+    if (!insight) return;
+    if (!customTitle.trim()) {
+      error('Please provide a title for the deadline');
+      return;
+    }
+    if (!customDate) {
+      error('Please select a deadline target date and time');
+      return;
+    }
+
     setIsSubmitting(true);
-    setTimeout(() => {
+    try {
+      const res = await fetch('/api/deadlines', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: customTitle.trim(),
+          company_name: insight.company_name,
+          deadline_at: new Date(customDate).toISOString(),
+          action_url: insight.application_url || null,
+          insight_id: insight.id || null,
+          offsets,
+        }),
+      });
+
+      if (res.ok) {
+        success(
+          'Deadline Added to Tracker',
+          `Automated reminders scheduled for ${insight.company_name}`
+        );
+        if (onSuccess) onSuccess();
+        onClose();
+      } else {
+        const data = await res.json();
+        error(data.error || 'Failed to schedule deadline');
+      }
+    } catch {
+      error('Error scheduling deadline');
+    } finally {
       setIsSubmitting(false);
-      success(
-        'Deadline Added to Tracker',
-        `Reminders configured for ${insight?.company_name || 'recruiter'}`
-      );
-      if (onSuccess) onSuccess();
-      onClose();
-    }, 500);
+    }
   };
 
   if (!isOpen || !insight) return null;
@@ -58,8 +105,9 @@ export const ConvertToDeadlineModal: React.FC<ConvertToDeadlineModalProps> = ({
           <input
             type="text"
             className="input-field"
-            defaultValue={insight.role_title ? `${insight.company_name} — ${insight.role_title} Registration` : `${insight.company_name} Placement Application`}
+            value={customTitle}
             onChange={(e) => setCustomTitle(e.target.value)}
+            placeholder="e.g. Google — Software Engineer Application"
           />
         </div>
 
@@ -68,11 +116,8 @@ export const ConvertToDeadlineModal: React.FC<ConvertToDeadlineModalProps> = ({
           <input
             type="datetime-local"
             className="input-field"
-            defaultValue={
-              insight.registration_deadline
-                ? new Date(insight.registration_deadline).toISOString().slice(0, 16)
-                : new Date(Date.now() + 86400000).toISOString().slice(0, 16)
-            }
+            value={customDate}
+            onChange={(e) => setCustomDate(e.target.value)}
           />
         </div>
 
@@ -107,6 +152,7 @@ export const ConvertToDeadlineModal: React.FC<ConvertToDeadlineModalProps> = ({
                     justifyContent: 'center',
                     gap: '6px',
                     transition: 'all var(--transition-fast)',
+                    cursor: 'pointer',
                   }}
                 >
                   {selected && <Check size={14} color="var(--primary-light)" />}
@@ -118,7 +164,7 @@ export const ConvertToDeadlineModal: React.FC<ConvertToDeadlineModalProps> = ({
         </div>
 
         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '10px' }}>
-          <Button variant="ghost" size="md" onClick={onClose}>
+          <Button variant="ghost" size="md" onClick={onClose} disabled={isSubmitting}>
             Cancel
           </Button>
           <Button
