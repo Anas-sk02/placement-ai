@@ -3,22 +3,22 @@
 import { useState, useEffect, useCallback } from 'react';
 import { StudentProfile } from '@/types/student.types';
 
-const DEFAULT_PROFILE: StudentProfile = {
-  user_id: 'guest',
-  full_name: 'Demo Student',
-  college_name: 'Indian Institute of Technology',
+const EMPTY_PROFILE: StudentProfile = {
+  user_id: '',
+  full_name: '',
+  college_name: '',
   degree: 'B.Tech',
   branch: 'CSE',
   graduation_year: 2026,
-  cgpa: 8.42,
-  percentage: 86.5,
+  cgpa: 0,
+  percentage: 0,
   active_backlogs: 0,
   history_backlogs: 0,
-  skills: ['Java', 'TypeScript', 'Next.js', 'PostgreSQL', 'Docker'],
+  skills: [],
 };
 
 export function useStudentProfile() {
-  const [profile, setProfile] = useState<StudentProfile>(DEFAULT_PROFILE);
+  const [profile, setProfile] = useState<StudentProfile>(EMPTY_PROFILE);
   const [loading, setLoading] = useState(true);
 
   const fetchProfile = useCallback(async () => {

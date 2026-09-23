@@ -8,7 +8,7 @@ export async function GET() {
     const { data: { user } } = await supabase.auth.getUser();
 
     if (!user) {
-      return NextResponse.json({ applications: [] });
+      return NextResponse.json({ error: 'Unauthorized. Please sign in.' }, { status: 401 });
     }
 
     const { data: apps, error } = await (supabase.from('applications') as any)
@@ -31,14 +31,16 @@ export async function POST(request: Request) {
     const supabase = createServerSupabaseClient();
     const { data: { user } } = await supabase.auth.getUser();
 
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized. Please sign in.' }, { status: 401 });
+    }
+
     const body = await request.json();
     const { company_name, role_title, status = 'SAVED', opportunity_id, insight_id, notes } = body;
 
-    const userId = user?.id || '00000000-0000-0000-0000-000000000000';
-
     const { data: app, error } = await (supabase.from('applications') as any)
       .insert({
-        user_id: userId,
+        user_id: user.id,
         company_name,
         role_title,
         status: status as ApplicationStatusEnum,

@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { GraduationCap, ArrowRight, Lock, Mail, AlertCircle, PlayCircle } from 'lucide-react';
+import { GraduationCap, ArrowRight, Lock, Mail, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { createClient } from '@/lib/supabase/client';
 
@@ -12,7 +12,6 @@ export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const [demoLoading, setDemoLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -39,18 +38,6 @@ export default function LoginPage() {
       setErrorMsg(err.message || 'An unexpected error occurred during sign in.');
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleDemoLogin = async () => {
-    setDemoLoading(true);
-    setErrorMsg(null);
-    try {
-      // Direct navigation to dashboard using demo session
-      router.push('/dashboard');
-      router.refresh();
-    } finally {
-      setDemoLoading(false);
     }
   };
 
@@ -91,7 +78,7 @@ export default function LoginPage() {
           </div>
           <h1 style={{ fontSize: '22px', fontWeight: 800 }}>Welcome Back</h1>
           <p style={{ fontSize: '13px', color: 'var(--text-muted)', marginTop: '4px' }}>
-            Sign in to track active placement drives & deadlines
+            Sign in to your student account to access placement notices & deadlines
           </p>
         </div>
 
@@ -166,38 +153,9 @@ export default function LoginPage() {
             style={{ width: '100%', marginTop: '10px' }}
             rightIcon={<ArrowRight size={16} />}
           >
-            Sign In with Account
+            Sign In to Account
           </Button>
         </form>
-
-        {/* Divider */}
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            margin: '20px 0',
-            gap: '12px',
-          }}
-        >
-          <div style={{ flex: 1, height: '1px', backgroundColor: 'var(--border-subtle)' }} />
-          <span style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-            or explore
-          </span>
-          <div style={{ flex: 1, height: '1px', backgroundColor: 'var(--border-subtle)' }} />
-        </div>
-
-        {/* Explicit Demo Account Button */}
-        <Button
-          type="button"
-          variant="secondary"
-          size="md"
-          isLoading={demoLoading}
-          onClick={handleDemoLogin}
-          style={{ width: '100%', borderColor: 'rgba(99, 102, 241, 0.3)' }}
-          leftIcon={<PlayCircle size={16} color="var(--primary-light)" />}
-        >
-          Explore with Demo / Sample Account
-        </Button>
 
         <div
           style={{
@@ -207,7 +165,7 @@ export default function LoginPage() {
             color: 'var(--text-muted)',
           }}
         >
-          New to PlaceMint?{' '}
+          Don&apos;t have an account?{' '}
           <Link href="/register" style={{ color: 'var(--primary-light)', fontWeight: 600 }}>
             Create Student Account
           </Link>

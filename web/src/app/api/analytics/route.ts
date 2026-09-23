@@ -34,10 +34,14 @@ export async function GET() {
     const supabase = createServerSupabaseClient();
     const { data: { user } } = await supabase.auth.getUser();
 
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized. Please sign in.' }, { status: 401 });
+    }
+
     // Query applications scoped to user
     const { data: apps } = await (supabase.from('applications') as any)
       .select('status')
-      .eq('user_id', user?.id || '00000000-0000-0000-0000-000000000000');
+      .eq('user_id', user.id);
 
     // Query active insights
     const { data: insights } = await (supabase.from('ai_insights') as any)

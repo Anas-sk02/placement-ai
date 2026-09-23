@@ -6,6 +6,10 @@ export async function POST(request: Request) {
     const supabase = createServerSupabaseClient();
     const { data: { user } } = await supabase.auth.getUser();
 
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized. Please sign in.' }, { status: 401 });
+    }
+
     const body = await request.json();
     const { groupId, isMonitored } = body;
 
@@ -13,12 +17,10 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'groupId is required' }, { status: 400 });
     }
 
-    const userId = user?.id || '00000000-0000-0000-0000-000000000000';
-
     const { data, error } = await (supabase.from('user_monitored_groups') as any)
       .upsert(
         {
-          user_id: userId,
+          user_id: user.id,
           group_id: groupId,
           is_monitored: isMonitored,
         },

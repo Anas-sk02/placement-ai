@@ -7,23 +7,7 @@ export async function GET() {
     const { data: { user }, error: authError } = await supabase.auth.getUser();
 
     if (authError || !user) {
-      // Fallback default sample profile if in demo/unauthenticated mode
-      return NextResponse.json({
-        profile: {
-          user_id: 'guest',
-          full_name: 'Demo Student',
-          college_name: 'Indian Institute of Technology',
-          degree: 'B.Tech',
-          branch: 'CSE',
-          graduation_year: 2026,
-          cgpa: 8.42,
-          percentage: 86.5,
-          active_backlogs: 0,
-          history_backlogs: 0,
-          skills: ['Java', 'Spring Boot', 'TypeScript', 'Next.js', 'PostgreSQL'],
-        },
-        authenticated: false,
-      });
+      return NextResponse.json({ error: 'Unauthorized. Please sign in.' }, { status: 401 });
     }
 
     const { data: profile, error } = await (supabase.from('student_profiles') as any)
@@ -67,13 +51,16 @@ export async function POST(request: Request) {
     const supabase = createServerSupabaseClient();
     const { data: { user } } = await supabase.auth.getUser();
 
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized. Please sign in.' }, { status: 401 });
+    }
+
     const body = await request.json();
-    const userId = user?.id || body.user_id || '00000000-0000-0000-0000-000000000000';
 
     const { data, error } = await (supabase.from('student_profiles') as any)
       .upsert(
         {
-          user_id: userId,
+          user_id: user.id,
           full_name: body.full_name,
           college_name: body.college_name,
           degree: body.degree,

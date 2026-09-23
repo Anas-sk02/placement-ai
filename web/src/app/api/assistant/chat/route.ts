@@ -3,10 +3,15 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { supabaseAdmin } from '@/lib/supabase/admin';
 
-const DEFAULT_USER_ID = '8646b47c-acfd-4f5d-ae91-6b7313d0ed40';
-
 export async function POST(request: Request) {
   try {
+    const supabase = createServerSupabaseClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized. Please sign in.' }, { status: 401 });
+    }
+
     const body = await request.json();
     const { message, conversationHistory = [] } = body;
 
@@ -14,23 +19,11 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Valid message is required' }, { status: 400 });
     }
 
-    // 1. Identify User
-    let userId = DEFAULT_USER_ID;
-    try {
-      const supabase = createServerSupabaseClient();
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user?.id) {
-        userId = user.id;
-      }
-    } catch {
-      // Fallback to default user
-    }
-
-    // 2. Fetch Live Context from Database via Admin client to bypass RLS limits
+    // Fetch Live Context from Database
     const [profileRes, insightsRes, deadlinesRes, appsRes] = await Promise.all([
       (supabaseAdmin.from('student_profiles') as any)
         .select('*')
-        .eq('user_id', userId)
+        .eq('user_id', user.id)
         .maybeSingle(),
       (supabaseAdmin.from('ai_insights') as any)
         .select('company_name, role_title, opportunity_type, salary_or_stipend, min_cgpa, allowed_branches, batch_year, deadline_timestamp, application_url, action_required, urgency, group_name, created_at')
@@ -38,20 +31,23 @@ export async function POST(request: Request) {
         .limit(25),
       (supabaseAdmin.from('deadlines') as any)
         .select('title, company_name, deadline_at, status, action_url')
+        .eq('user_id', user.id)
         .order('deadline_at', { ascending: true })
         .limit(10),
       (supabaseAdmin.from('applications') as any)
         .select('company_name, role_title, status, applied_date, salary_or_stipend')
+        .eq('user_id', user.id)
         .order('applied_date', { ascending: false })
         .limit(10),
     ]);
 
+    const userMeta = user.user_metadata || {};
     const profile = profileRes.data || {
-      full_name: 'Hasan',
-      degree: 'B.Tech',
-      branch: 'CSE',
-      graduation_year: 2026,
-      cgpa: 8.42,
+      full_name: userMeta.full_name || user.email?.split('@')[0] || 'Student',
+      degree: userMeta.degree || 'B.Tech',
+      branch: userMeta.branch || 'CSE',
+      graduation_year: userMeta.graduation_year || 2026,
+      cgpa: 8.0,
       active_backlogs: 0,
       skills: ['React', 'Next.js', 'Node.js', 'Python', 'TypeScript', 'SQL', 'Data Structures', 'Algorithms'],
     };

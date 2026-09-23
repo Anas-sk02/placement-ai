@@ -6,13 +6,15 @@ import { calculateReminders } from '@/lib/business/reminder-scheduler';
 export async function GET() {
   try {
     const supabase = createServerSupabaseClient();
-    let { data: { user } } = await supabase.auth.getUser();
+    const { data: { user } } = await supabase.auth.getUser();
 
-    const targetUserId = user?.id || '8646b47c-acfd-4f5d-ae91-6b7313d0ed40';
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized. Please sign in.' }, { status: 401 });
+    }
 
     const { data: deadlines, error } = await (supabaseAdmin.from('deadlines') as any)
       .select('*')
-      .eq('user_id', targetUserId)
+      .eq('user_id', user.id)
       .order('deadline_at', { ascending: true });
 
     if (error) {
@@ -28,12 +30,14 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const supabase = createServerSupabaseClient();
-    let { data: { user } } = await supabase.auth.getUser();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized. Please sign in.' }, { status: 401 });
+    }
 
     const body = await request.json();
     const { title, company_name, deadline_at, action_url, insight_id, offsets = [24, 6, 1] } = body;
-
-    const userId = user?.id || '8646b47c-acfd-4f5d-ae91-6b7313d0ed40';
 
     if (!title || !deadline_at) {
       return NextResponse.json({ error: 'Title and deadline_at are required' }, { status: 400 });
@@ -41,7 +45,7 @@ export async function POST(request: Request) {
 
     const { data: deadline, error: deadlineError } = await (supabaseAdmin.from('deadlines') as any)
       .insert({
-        user_id: userId,
+        user_id: user.id,
         insight_id: insight_id || null,
         title,
         company_name: company_name || 'Placement Recruiter',
@@ -58,7 +62,7 @@ export async function POST(request: Request) {
 
     // Schedule Reminders
     const remindersToInsert = calculateReminders(deadline_at, offsets).map((rem) => ({
-      user_id: userId,
+      user_id: user.id,
       deadline_id: deadline.id,
       scheduled_for: rem.scheduled_for,
       offset_hours: rem.offset_hours,

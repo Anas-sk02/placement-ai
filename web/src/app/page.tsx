@@ -39,7 +39,7 @@ export default function LandingPage() {
   );
   const [isExtracting, setIsExtracting] = useState(false);
 
-  const handleRunDemo = () => {
+  const handleRunExtractor = () => {
     setIsExtracting(true);
     setTimeout(() => {
       setExtractedData(parsePlacementMessageFallback(inputText));
@@ -86,9 +86,9 @@ export default function LandingPage() {
               Sign In
             </Button>
           </Link>
-          <Link href="/dashboard">
+          <Link href="/register">
             <Button variant="primary" size="md" rightIcon={<ArrowRight size={16} />}>
-              Open Command Center
+              Create Student Account
             </Button>
           </Link>
         </div>
@@ -139,18 +139,17 @@ export default function LandingPage() {
               flexWrap: 'wrap',
             }}
           >
-            <Link href="/dashboard">
+            <Link href="/register">
               <Button variant="primary" size="lg" rightIcon={<ArrowRight size={18} />}>
-                Launch App
+                Get Started Free
               </Button>
             </Link>
-            <Link href="/telegram">
+            <Link href="/login">
               <Button
                 variant="secondary"
                 size="lg"
-                leftIcon={<Send size={18} color="#0088cc" />}
               >
-                Connect Telegram Channels
+                Sign In to Account
               </Button>
             </Link>
           </div>
@@ -160,7 +159,7 @@ export default function LandingPage() {
         <section style={{ marginTop: '40px', marginBottom: '80px' }}>
           <div style={{ textAlign: 'center', marginBottom: '28px' }}>
             <h2 style={{ fontSize: '24px', fontWeight: 700 }}>
-              Live Dual-Engine AI Extractor Demo
+              Live AI Notice Extractor
             </h2>
             <p style={{ fontSize: '14px', color: 'var(--text-muted)' }}>
               Paste any messy Telegram placement broadcast or test with our sample notice:
@@ -215,7 +214,7 @@ export default function LandingPage() {
                   variant="primary"
                   size="md"
                   isLoading={isExtracting}
-                  onClick={handleRunDemo}
+                  onClick={handleRunExtractor}
                   leftIcon={<Sparkles size={16} />}
                 >
                   Run Extraction
