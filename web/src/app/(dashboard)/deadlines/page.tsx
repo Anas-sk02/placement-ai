@@ -2,17 +2,20 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { CalendarClock, Plus, Filter, CheckCircle2, Clock, AlertTriangle, Sparkles, PlusCircle } from 'lucide-react';
+import { CalendarClock, Plus, Filter, CheckCircle2, Clock, AlertTriangle, Sparkles, PlusCircle, LayoutGrid, List, Calendar as CalendarIcon, Download } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { DeadlineCard } from '@/components/deadlines/DeadlineCard';
+import { CalendarView } from '@/components/deadlines/CalendarView';
 import { Modal } from '@/components/ui/Modal';
 import { DeadlineItem } from '@/types/deadline.types';
 import { useToast } from '@/components/ui/Toast';
+import { generateMultiIcsFile, downloadIcsFile } from '@/lib/calendar/calendar-sync';
 
 export default function DeadlinesPage() {
   const { success, error } = useToast();
   const [deadlines, setDeadlines] = useState<DeadlineItem[]>([]);
   const [tab, setTab] = useState<'ACTIVE' | 'COMPLETED' | 'ALL'>('ACTIVE');
+  const [viewMode, setViewMode] = useState<'LIST' | 'CALENDAR'>('LIST');
   const [isAddOpen, setIsAddOpen] = useState(false);
 
   // Add Deadline Form State
@@ -89,6 +92,16 @@ export default function DeadlinesPage() {
     }
   };
 
+  const handleExportAllIcs = () => {
+    if (deadlines.length === 0) {
+      error('No deadlines available to export');
+      return;
+    }
+    const icsContent = generateMultiIcsFile(deadlines);
+    downloadIcsFile('placement-deadlines.ics', icsContent);
+    success('Calendar Exported', 'Downloaded .ics file for Google / Apple / Outlook calendar sync');
+  };
+
   const filtered = deadlines.filter((d) => {
     if (tab === 'ACTIVE') return d.status !== 'COMPLETED';
     if (tab === 'COMPLETED') return d.status === 'COMPLETED';
@@ -111,108 +124,186 @@ export default function DeadlinesPage() {
         <div>
           <h1 style={{ fontSize: '24px', fontWeight: 800 }}>Placement Deadline Engine</h1>
           <p style={{ fontSize: '13.5px', color: 'var(--text-secondary)', marginTop: '4px' }}>
-            Automated reminder offsets configured at 24h, 6h, and 1h intervals
+            Interactive Calendar & Automated reminder offsets configured at 24h, 6h, and 1h intervals
           </p>
         </div>
 
-        <div style={{ display: 'flex', gap: '10px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+          {/* View Mode Switcher */}
+          <div
+            style={{
+              display: 'flex',
+              backgroundColor: '#111624',
+              borderRadius: '8px',
+              border: '1px solid var(--border-subtle)',
+              padding: '2px',
+            }}
+          >
+            <button
+              onClick={() => setViewMode('LIST')}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                padding: '6px 12px',
+                borderRadius: '6px',
+                fontSize: '12px',
+                fontWeight: 600,
+                border: 'none',
+                backgroundColor: viewMode === 'LIST' ? 'var(--primary)' : 'transparent',
+                color: viewMode === 'LIST' ? '#ffffff' : 'var(--text-secondary)',
+                cursor: 'pointer',
+                transition: 'all var(--transition-fast)',
+              }}
+            >
+              <List size={14} />
+              List
+            </button>
+            <button
+              onClick={() => setViewMode('CALENDAR')}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                padding: '6px 12px',
+                borderRadius: '6px',
+                fontSize: '12px',
+                fontWeight: 600,
+                border: 'none',
+                backgroundColor: viewMode === 'CALENDAR' ? 'var(--primary)' : 'transparent',
+                color: viewMode === 'CALENDAR' ? '#ffffff' : 'var(--text-secondary)',
+                cursor: 'pointer',
+                transition: 'all var(--transition-fast)',
+              }}
+            >
+              <CalendarIcon size={14} />
+              Calendar
+            </button>
+          </div>
+
+          {/* Export All .ics */}
+          {deadlines.length > 0 && (
+            <Button
+              variant="secondary"
+              size="md"
+              onClick={handleExportAllIcs}
+              leftIcon={<Download size={14} />}
+              title="Export all deadlines into an .ics calendar file"
+            >
+              Sync All (.ics)
+            </Button>
+          )}
+
           <Button
             variant="primary"
             size="md"
             onClick={() => setIsAddOpen(true)}
             leftIcon={<Plus size={16} />}
           >
-            Add Custom Deadline
+            Add Deadline
           </Button>
 
-          <div style={{ display: 'flex', gap: '6px' }}>
-            {['ACTIVE', 'COMPLETED', 'ALL'].map((t) => (
-              <button
-                key={t}
-                onClick={() => setTab(t as any)}
-                style={{
-                  padding: '8px 14px',
-                  borderRadius: '8px',
-                  fontSize: '12.5px',
-                  fontWeight: 600,
-                  border: `1px solid ${tab === t ? 'var(--primary)' : 'var(--border-subtle)'}`,
-                  backgroundColor: tab === t ? 'rgba(99, 102, 241, 0.2)' : 'transparent',
-                  color: tab === t ? '#ffffff' : 'var(--text-secondary)',
-                  transition: 'all var(--transition-fast)',
-                }}
-              >
-                {t === 'ACTIVE' ? 'Active' : t === 'COMPLETED' ? 'Completed' : 'All'}
-              </button>
-            ))}
-          </div>
+          {/* Filter Status Tabs (applicable to list) */}
+          {viewMode === 'LIST' && (
+            <div style={{ display: 'flex', gap: '6px' }}>
+              {['ACTIVE', 'COMPLETED', 'ALL'].map((t) => (
+                <button
+                  key={t}
+                  onClick={() => setTab(t as any)}
+                  style={{
+                    padding: '8px 14px',
+                    borderRadius: '8px',
+                    fontSize: '12.5px',
+                    fontWeight: 600,
+                    border: `1px solid ${tab === t ? 'var(--primary)' : 'var(--border-subtle)'}`,
+                    backgroundColor: tab === t ? 'rgba(99, 102, 241, 0.2)' : 'transparent',
+                    color: tab === t ? '#ffffff' : 'var(--text-secondary)',
+                    transition: 'all var(--transition-fast)',
+                    cursor: 'pointer',
+                  }}
+                >
+                  {t === 'ACTIVE' ? 'Active' : t === 'COMPLETED' ? 'Completed' : 'All'}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
-      {/* Deadlines List */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-        {filtered.map((deadline) => (
-          <DeadlineCard
-            key={deadline.id}
-            deadline={deadline}
-            onComplete={handleComplete}
-          />
-        ))}
+      {/* Main View: Calendar or List */}
+      {viewMode === 'CALENDAR' ? (
+        <CalendarView
+          deadlines={deadlines}
+          onComplete={handleComplete}
+          onAddCustom={() => setIsAddOpen(true)}
+        />
+      ) : (
+        /* Deadlines List */
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+          {filtered.map((deadline) => (
+            <DeadlineCard
+              key={deadline.id}
+              deadline={deadline}
+              onComplete={handleComplete}
+            />
+          ))}
 
-        {filtered.length === 0 && (
-          <div
-            className="glass-card"
-            style={{
-              padding: '48px 24px',
-              textAlign: 'center',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '16px',
-            }}
-          >
+          {filtered.length === 0 && (
             <div
+              className="glass-card"
               style={{
-                width: '56px',
-                height: '56px',
-                borderRadius: '16px',
-                backgroundColor: 'rgba(99, 102, 241, 0.1)',
-                border: '1px solid rgba(99, 102, 241, 0.25)',
+                padding: '48px 24px',
+                textAlign: 'center',
                 display: 'flex',
+                flexDirection: 'column',
                 alignItems: 'center',
                 justifyContent: 'center',
+                gap: '16px',
               }}
             >
-              <CalendarClock size={28} color="var(--primary-light)" />
-            </div>
-
-            <div>
-              <h3 style={{ fontSize: '18px', fontWeight: 700, marginBottom: '6px' }}>
-                No Placement Deadlines Scheduled
-              </h3>
-              <p style={{ fontSize: '13.5px', color: 'var(--text-muted)', maxWidth: '460px', margin: '0 auto' }}>
-                Track deadlines with 1-click from the Placement Feed or create custom deadline reminders.
-              </p>
-            </div>
-
-            <div style={{ display: 'flex', gap: '12px' }}>
-              <Button
-                variant="primary"
-                size="md"
-                onClick={() => setIsAddOpen(true)}
-                leftIcon={<PlusCircle size={16} />}
+              <div
+                style={{
+                  width: '56px',
+                  height: '56px',
+                  borderRadius: '16px',
+                  backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                  border: '1px solid rgba(99, 102, 241, 0.25)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
               >
-                Add First Deadline
-              </Button>
-              <Link href="/insights">
-                <Button variant="secondary" size="md" leftIcon={<Sparkles size={16} />}>
-                  Explore Notices Feed
+                <CalendarClock size={28} color="var(--primary-light)" />
+              </div>
+
+              <div>
+                <h3 style={{ fontSize: '18px', fontWeight: 700, marginBottom: '6px' }}>
+                  No Placement Deadlines Scheduled
+                </h3>
+                <p style={{ fontSize: '13.5px', color: 'var(--text-muted)', maxWidth: '460px', margin: '0 auto' }}>
+                  Track deadlines with 1-click from the Placement Feed or create custom deadline reminders.
+                </p>
+              </div>
+
+              <div style={{ display: 'flex', gap: '12px' }}>
+                <Button
+                  variant="primary"
+                  size="md"
+                  onClick={() => setIsAddOpen(true)}
+                  leftIcon={<PlusCircle size={16} />}
+                >
+                  Add First Deadline
                 </Button>
-              </Link>
+                <Link href="/insights">
+                  <Button variant="secondary" size="md" leftIcon={<Sparkles size={16} />}>
+                    Explore Notices Feed
+                  </Button>
+                </Link>
+              </div>
             </div>
-          </div>
-        )}
-      </div>
+          )}
+        </div>
+      )}
 
       {/* Add Custom Deadline Modal */}
       <Modal isOpen={isAddOpen} onClose={() => setIsAddOpen(false)} title="Schedule New Placement Deadline">

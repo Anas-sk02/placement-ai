@@ -7,6 +7,8 @@ import {
   ChevronRight,
   Trash2,
   FileText,
+  GripVertical,
+  CheckCircle2,
 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Modal } from '@/components/ui/Modal';
@@ -33,6 +35,56 @@ export default function ApplicationsKanbanPage() {
   const [newNotes, setNewNotes] = useState('');
 
   const [activeNoteApp, setActiveNoteApp] = useState<ApplicationItem | null>(null);
+
+  // Drag and Drop States
+  const [draggedAppId, setDraggedAppId] = useState<string | null>(null);
+  const [dragOverCol, setDragOverCol] = useState<ApplicationStatusEnum | null>(null);
+
+  const handleDragStart = (e: React.DragEvent, id: string) => {
+    setDraggedAppId(id);
+    e.dataTransfer.setData('text/plain', id);
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleDragOver = (e: React.DragEvent, colId: ApplicationStatusEnum) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    if (dragOverCol !== colId) {
+      setDragOverCol(colId);
+    }
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    // Only reset if leaving the column element itself
+    if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+      setDragOverCol(null);
+    }
+  };
+
+  const handleDrop = (e: React.DragEvent, targetCol: ApplicationStatusEnum) => {
+    e.preventDefault();
+    setDragOverCol(null);
+
+    const appId = draggedAppId || e.dataTransfer.getData('text/plain');
+    if (!appId) return;
+
+    const currentApp = applications.find((a) => a.id === appId);
+    if (!currentApp || currentApp.status === targetCol) {
+      setDraggedAppId(null);
+      return;
+    }
+
+    updateApplicationStatus(appId, targetCol);
+
+    if (targetCol === 'SELECTED') {
+      success('Offer Celebrations! 🎉', `Congratulations! Marked ${currentApp.company_name} as Offer Received!`);
+    } else {
+      const targetColInfo = COLUMNS.find((c) => c.id === targetCol);
+      success('Pipeline Updated', `Moved ${currentApp.company_name} to ${targetColInfo?.title || targetCol}`);
+    }
+
+    setDraggedAppId(null);
+  };
 
   const moveNext = (appId: string, current: ApplicationStatusEnum) => {
     const order: ApplicationStatusEnum[] = ['SAVED', 'APPLIED', 'ASSESSMENT', 'INTERVIEW', 'SELECTED'];
@@ -82,7 +134,7 @@ export default function ApplicationsKanbanPage() {
             Application Pipeline
           </h1>
           <p style={{ fontSize: '13.5px', color: 'var(--text-secondary)', marginTop: '4px' }}>
-            Track campus and off-campus recruitment stages in real time
+            Drag & drop cards across stages to track campus and off-campus recruitment in real time
           </p>
         </div>
 
@@ -107,19 +159,25 @@ export default function ApplicationsKanbanPage() {
       >
         {COLUMNS.map((col) => {
           const colApps = applications.filter((a) => a.status === col.id);
+          const isOver = dragOverCol === col.id;
 
           return (
             <div
               key={col.id}
+              onDragOver={(e) => handleDragOver(e, col.id)}
+              onDragLeave={handleDragLeave}
+              onDrop={(e) => handleDrop(e, col.id)}
               style={{
-                backgroundColor: '#0c0f17',
-                border: '1px solid var(--border-subtle)',
+                backgroundColor: isOver ? 'rgba(59, 130, 246, 0.08)' : '#0c0f17',
+                border: `1px solid ${isOver ? 'var(--primary)' : 'var(--border-subtle)'}`,
+                boxShadow: isOver ? '0 0 12px rgba(59, 130, 246, 0.25)' : 'none',
                 borderRadius: '10px',
                 padding: '16px',
                 minHeight: '480px',
                 display: 'flex',
                 flexDirection: 'column',
                 gap: '12px',
+                transition: 'all var(--transition-fast)',
               }}
             >
               {/* Column Header */}
@@ -160,7 +218,7 @@ export default function ApplicationsKanbanPage() {
               </div>
 
               {/* Cards list */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', minHeight: '100px' }}>
                 {colApps.length === 0 ? (
                   <div
                     style={{
@@ -168,113 +226,136 @@ export default function ApplicationsKanbanPage() {
                       padding: '36px 12px',
                       color: 'var(--text-muted)',
                       fontSize: '12px',
-                      border: '1px dashed var(--border-subtle)',
+                      border: `1px dashed ${isOver ? 'var(--primary)' : 'var(--border-subtle)'}`,
+                      backgroundColor: isOver ? 'rgba(59, 130, 246, 0.05)' : 'transparent',
                       borderRadius: '8px',
+                      transition: 'all var(--transition-fast)',
                     }}
                   >
-                    No drives in this stage
+                    {isOver ? 'Drop card here' : 'No drives in this stage'}
                   </div>
                 ) : (
-                  colApps.map((app) => (
-                    <div
-                      key={app.id}
-                      className="glass-card"
-                      style={{
-                        padding: '16px',
-                        borderRadius: '8px',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        gap: '8px',
-                        backgroundColor: '#111624',
-                      }}
-                    >
-                      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '8px' }}>
-                        <strong style={{ fontSize: '13.5px', color: 'var(--text-primary)', fontWeight: 600 }}>
-                          {app.company_name}
-                        </strong>
-                        <button
-                          onClick={() => deleteApplication(app.id)}
-                          style={{
-                            color: 'var(--text-muted)',
-                            padding: '3px',
-                            background: 'transparent',
-                            border: 'none',
-                            cursor: 'pointer',
-                          }}
-                          title="Remove from pipeline"
-                          onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--status-urgent)')}
-                          onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--text-muted)')}
-                        >
-                          <Trash2 size={13} />
-                        </button>
-                      </div>
+                  colApps.map((app) => {
+                    const isBeingDragged = draggedAppId === app.id;
 
-                      <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
-                        {app.role_title}
-                      </div>
+                    return (
+                      <div
+                        key={app.id}
+                        draggable
+                        onDragStart={(e) => handleDragStart(e, app.id)}
+                        onDragEnd={() => {
+                          setDraggedAppId(null);
+                          setDragOverCol(null);
+                        }}
+                        className="glass-card"
+                        style={{
+                          padding: '16px',
+                          borderRadius: '8px',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          gap: '8px',
+                          backgroundColor: '#111624',
+                          cursor: 'grab',
+                          opacity: isBeingDragged ? 0.4 : 1,
+                          border: isBeingDragged
+                            ? '1px dashed var(--primary)'
+                            : '1px solid var(--border-subtle)',
+                          transition: 'opacity 0.2s, transform 0.15s, border-color 0.2s',
+                        }}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '8px' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <GripVertical size={13} style={{ color: 'var(--text-subtle)', flexShrink: 0, cursor: 'grab' }} />
+                            <strong style={{ fontSize: '13.5px', color: 'var(--text-primary)', fontWeight: 600 }}>
+                              {app.company_name}
+                            </strong>
+                          </div>
 
-                      {app.notes && (
-                        <div
-                          style={{
-                            fontSize: '11.5px',
-                            color: 'var(--text-muted)',
-                            backgroundColor: '#090c13',
-                            border: '1px solid var(--border-subtle)',
-                            padding: '6px 8px',
-                            borderRadius: '6px',
-                            lineHeight: 1.4,
-                          }}
-                        >
-                          {app.notes}
-                        </div>
-                      )}
-
-                      {col.id !== 'SELECTED' && col.id !== 'REJECTED' && (
-                        <div
-                          style={{
-                            display: 'flex',
-                            justifyContent: 'space-between',
-                            alignItems: 'center',
-                            marginTop: '4px',
-                            paddingTop: '8px',
-                            borderTop: '1px solid var(--border-subtle)',
-                          }}
-                        >
                           <button
-                            onClick={() => setActiveNoteApp(app)}
+                            onClick={() => deleteApplication(app.id)}
                             style={{
-                              fontSize: '11.5px',
-                              color: 'var(--primary-light)',
-                              display: 'flex',
-                              alignItems: 'center',
-                              gap: 4,
+                              color: 'var(--text-muted)',
+                              padding: '3px',
                               background: 'transparent',
                               border: 'none',
                               cursor: 'pointer',
                             }}
+                            title="Remove from pipeline"
+                            onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--status-urgent)')}
+                            onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--text-muted)')}
                           >
-                            <FileText size={12} />
-                            Notes
-                          </button>
-
-                          <button
-                            className="btn btn-secondary btn-sm"
-                            onClick={() => moveNext(app.id, col.id)}
-                            style={{
-                              fontSize: '11px',
-                              padding: '3px 8px',
-                              display: 'flex',
-                              alignItems: 'center',
-                              gap: '3px',
-                            }}
-                          >
-                            <span>Advance</span>
-                            <ChevronRight size={12} />
+                            <Trash2 size={13} />
                           </button>
                         </div>
-                      )}
-                    </div>
-                  ))
+
+                        <div style={{ fontSize: '12px', color: 'var(--text-secondary)', paddingLeft: '19px' }}>
+                          {app.role_title}
+                        </div>
+
+                        {app.notes && (
+                          <div
+                            style={{
+                              fontSize: '11.5px',
+                              color: 'var(--text-muted)',
+                              backgroundColor: '#090c13',
+                              border: '1px solid var(--border-subtle)',
+                              padding: '6px 8px',
+                              borderRadius: '6px',
+                              lineHeight: 1.4,
+                              marginLeft: '19px',
+                            }}
+                          >
+                            {app.notes}
+                          </div>
+                        )}
+
+                        {col.id !== 'SELECTED' && col.id !== 'REJECTED' && (
+                          <div
+                            style={{
+                              display: 'flex',
+                              justifyContent: 'space-between',
+                              alignItems: 'center',
+                              marginTop: '4px',
+                              paddingTop: '8px',
+                              borderTop: '1px solid var(--border-subtle)',
+                            }}
+                          >
+                            <button
+                              onClick={() => setActiveNoteApp(app)}
+                              style={{
+                                fontSize: '11.5px',
+                                color: 'var(--primary-light)',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 4,
+                                background: 'transparent',
+                                border: 'none',
+                                cursor: 'pointer',
+                              }}
+                            >
+                              <FileText size={12} />
+                              Notes
+                            </button>
+
+                            <button
+                              className="btn btn-secondary btn-sm"
+                              onClick={() => moveNext(app.id, col.id)}
+                              style={{
+                                fontSize: '11px',
+                                padding: '3px 8px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '3px',
+                              }}
+                            >
+                              <span>Advance</span>
+                              <ChevronRight size={12} />
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })
                 )}
               </div>
             </div>

@@ -1,9 +1,10 @@
 'use client';
 
 import React from 'react';
-import { Clock, CheckCircle, ExternalLink, Bell } from 'lucide-react';
+import { Clock, CheckCircle, ExternalLink, Bell, Calendar as CalendarIcon } from 'lucide-react';
 import { DeadlineItem } from '@/types/deadline.types';
 import { formatTimeRemaining } from '@/lib/business/reminder-scheduler';
+import { generateGoogleCalendarUrl, generateIcsFile, downloadIcsFile } from '@/lib/calendar/calendar-sync';
 import { Badge } from '../ui/Badge';
 import { Button } from '../ui/Button';
 
@@ -28,9 +29,10 @@ export const DeadlineCard: React.FC<DeadlineCardProps> = ({ deadline, onComplete
         opacity: isDone ? 0.55 : 1,
         backgroundColor: '#111624',
         borderRadius: '10px',
+        flexWrap: 'wrap',
       }}
     >
-      <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flex: 1 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flex: 1, minWidth: '280px' }}>
         <button
           onClick={() => onComplete(deadline.id)}
           style={{
@@ -89,6 +91,7 @@ export const DeadlineCard: React.FC<DeadlineCardProps> = ({ deadline, onComplete
               fontSize: '12px',
               color: 'var(--text-muted)',
               marginTop: '4px',
+              flexWrap: 'wrap',
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
@@ -111,7 +114,7 @@ export const DeadlineCard: React.FC<DeadlineCardProps> = ({ deadline, onComplete
         </div>
       </div>
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
         <Badge
           variant={time.isUrgent ? 'urgent' : isDone ? 'eligible' : 'info'}
           pulsing={time.isUrgent && !isDone}
@@ -119,9 +122,52 @@ export const DeadlineCard: React.FC<DeadlineCardProps> = ({ deadline, onComplete
           {isDone ? 'Completed' : time.text}
         </Badge>
 
+        {/* 1-Click Google Calendar Sync */}
+        <a
+          href={generateGoogleCalendarUrl(deadline)}
+          target="_blank"
+          rel="noopener noreferrer"
+          title="Add this deadline to Google Calendar"
+          style={{ textDecoration: 'none' }}
+        >
+          <button
+            className="btn btn-secondary btn-sm"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px',
+              fontSize: '11.5px',
+              padding: '5px 10px',
+            }}
+          >
+            <CalendarIcon size={12} color="#60a5fa" />
+            <span>Google Cal</span>
+          </button>
+        </a>
+
+        {/* iCal / Apple Calendar Download */}
+        <button
+          className="btn btn-secondary btn-sm"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '4px',
+            fontSize: '11.5px',
+            padding: '5px 10px',
+          }}
+          title="Download .ics for Apple Calendar / Outlook"
+          onClick={() => {
+            const ics = generateIcsFile(deadline);
+            downloadIcsFile(`${deadline.company_name}-deadline.ics`, ics);
+          }}
+        >
+          <CalendarIcon size={12} />
+          <span>.ics</span>
+        </button>
+
         {deadline.action_url && (
           <a href={deadline.action_url} target="_blank" rel="noopener noreferrer">
-            <Button variant="secondary" size="sm" rightIcon={<ExternalLink size={13} />}>
+            <Button variant="primary" size="sm" rightIcon={<ExternalLink size={12} />}>
               Open Form
             </Button>
           </a>
