@@ -21,14 +21,14 @@ import { createClient } from '@/lib/supabase/client';
 
 const NAV_ITEMS = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-  { name: 'Telegram Groups', href: '/telegram', icon: Send, badge: 'Live' },
-  { name: 'Placement Feed', href: '/insights', icon: Sparkles },
+  { name: 'Telegram Feed', href: '/telegram', icon: Send, badge: 'Live' },
+  { name: 'Placement Notices', href: '/insights', icon: Sparkles },
   { name: 'Deadlines', href: '/deadlines', icon: CalendarClock },
   { name: 'Applications', href: '/applications', icon: KanbanSquare },
-  { name: 'Company Hub', href: '/companies', icon: GraduationCap },
-  { name: 'Analytics & Prep', href: '/analytics', icon: BarChart3 },
-  { name: 'Profile & Criteria', href: '/profile', icon: UserCheck },
-  { name: 'AI Assistant', href: '/assistant', icon: BotMessageSquare },
+  { name: 'Company Directory', href: '/companies', icon: GraduationCap },
+  { name: 'Analytics', href: '/analytics', icon: BarChart3 },
+  { name: 'Student Profile', href: '/profile', icon: UserCheck },
+  { name: 'Placement Assistant', href: '/assistant', icon: BotMessageSquare },
   { name: 'Settings', href: '/settings', icon: Settings },
 ];
 
@@ -50,8 +50,8 @@ export const Sidebar: React.FC = () => {
     }
   };
 
-  const displayName = profile?.full_name || 'Student Account';
-  const displaySubtitle = `${profile?.degree || 'B.Tech'} ${profile?.branch || 'CSE'} • ${profile?.graduation_year || 2026} Batch`;
+  const displayName = profile?.full_name || 'My Account';
+  const displaySubtitle = `${profile?.degree || 'B.Tech'} ${profile?.branch || 'CSE'} • ${profile?.graduation_year || 2026}`;
   const initials = displayName
     .split(' ')
     .filter(Boolean)
@@ -62,8 +62,8 @@ export const Sidebar: React.FC = () => {
   return (
     <aside
       style={{
-        width: '260px',
-        backgroundColor: 'rgba(10, 14, 26, 0.95)',
+        width: '264px',
+        backgroundColor: '#0a0d15',
         borderRight: '1px solid var(--border-subtle)',
         display: 'flex',
         flexDirection: 'column',
@@ -71,12 +71,13 @@ export const Sidebar: React.FC = () => {
         position: 'sticky',
         top: 0,
         zIndex: 40,
+        flexShrink: 0,
       }}
     >
       {/* Brand Header */}
       <div
         style={{
-          padding: '24px 20px',
+          padding: '24px 22px',
           display: 'flex',
           alignItems: 'center',
           gap: '12px',
@@ -85,31 +86,48 @@ export const Sidebar: React.FC = () => {
       >
         <div
           style={{
-            width: '36px',
-            height: '36px',
-            borderRadius: '10px',
+            width: '34px',
+            height: '34px',
+            borderRadius: '8px',
             background: 'var(--brand-gradient)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            boxShadow: 'var(--primary-glow)',
+            boxShadow: '0 2px 8px rgba(37, 99, 235, 0.3)',
+            border: '1px solid rgba(255, 255, 255, 0.15)',
           }}
         >
-          <GraduationCap size={20} color="#ffffff" />
+          <GraduationCap size={19} color="#ffffff" />
         </div>
         <div>
           <div
             style={{
-              fontSize: '17px',
-              fontWeight: 800,
-              letterSpacing: '-0.3px',
+              fontSize: '15.5px',
+              fontWeight: 700,
+              letterSpacing: '-0.02em',
               color: '#ffffff',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px',
             }}
           >
-            PlaceMint<span className="text-gradient">.AI</span>
+            PlaceMint
+            <span
+              style={{
+                fontSize: '10px',
+                fontWeight: 600,
+                color: 'var(--primary-light)',
+                backgroundColor: 'rgba(59, 130, 246, 0.12)',
+                padding: '1px 5px',
+                borderRadius: '4px',
+                border: '1px solid rgba(59, 130, 246, 0.25)',
+              }}
+            >
+              AI
+            </span>
           </div>
-          <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
-            Notice & Deadline Intelligence
+          <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '1px' }}>
+            Campus Placement Suite
           </div>
         </div>
       </div>
@@ -121,7 +139,7 @@ export const Sidebar: React.FC = () => {
           padding: '16px 12px',
           display: 'flex',
           flexDirection: 'column',
-          gap: '4px',
+          gap: '3px',
           overflowY: 'auto',
         }}
       >
@@ -138,33 +156,33 @@ export const Sidebar: React.FC = () => {
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between',
-                padding: '10px 14px',
-                borderRadius: '10px',
+                padding: '9px 12px',
+                borderRadius: '8px',
                 color: isActive ? '#ffffff' : 'var(--text-secondary)',
-                backgroundColor: isActive ? 'rgba(99, 102, 241, 0.14)' : 'transparent',
-                border: isActive ? '1px solid rgba(99, 102, 241, 0.3)' : '1px solid transparent',
-                fontWeight: isActive ? 600 : 500,
-                fontSize: '13.5px',
+                backgroundColor: isActive ? 'rgba(37, 99, 235, 0.12)' : 'transparent',
+                border: isActive ? '1px solid rgba(59, 130, 246, 0.25)' : '1px solid transparent',
+                fontWeight: isActive ? 600 : 450,
+                fontSize: '13px',
                 transition: 'all var(--transition-fast)',
               }}
             >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                 <Icon
-                  size={18}
-                  color={isActive ? 'var(--primary-light)' : 'currentColor'}
+                  size={17}
+                  color={isActive ? 'var(--primary-light)' : 'var(--text-muted)'}
                 />
                 <span>{item.name}</span>
               </div>
               {item.badge && (
                 <span
                   style={{
-                    fontSize: '10px',
-                    fontWeight: 700,
+                    fontSize: '9.5px',
+                    fontWeight: 600,
                     padding: '2px 6px',
                     borderRadius: '999px',
-                    backgroundColor: 'rgba(16, 185, 129, 0.15)',
+                    backgroundColor: 'rgba(16, 185, 129, 0.1)',
                     color: 'var(--status-eligible)',
-                    border: '1px solid rgba(16, 185, 129, 0.3)',
+                    border: '1px solid rgba(16, 185, 129, 0.25)',
                   }}
                 >
                   {item.badge}
@@ -180,7 +198,7 @@ export const Sidebar: React.FC = () => {
         style={{
           padding: '14px 16px',
           borderTop: '1px solid var(--border-subtle)',
-          backgroundColor: 'rgba(255, 255, 255, 0.015)',
+          backgroundColor: 'rgba(0, 0, 0, 0.2)',
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -197,17 +215,17 @@ export const Sidebar: React.FC = () => {
           >
             <div
               style={{
-                width: '34px',
-                height: '34px',
-                borderRadius: '50%',
-                backgroundColor: 'rgba(99, 102, 241, 0.25)',
-                border: '1px solid rgba(99, 102, 241, 0.4)',
+                width: '32px',
+                height: '32px',
+                borderRadius: '6px',
+                backgroundColor: '#161d2f',
+                border: '1px solid var(--border-medium)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                fontWeight: 700,
-                fontSize: '12px',
-                color: 'var(--primary-light)',
+                fontWeight: 600,
+                fontSize: '11.5px',
+                color: 'var(--text-primary)',
                 flexShrink: 0,
               }}
             >
@@ -216,7 +234,7 @@ export const Sidebar: React.FC = () => {
             <div style={{ flex: 1, minWidth: 0 }}>
               <div
                 style={{
-                  fontSize: '13px',
+                  fontSize: '12.5px',
                   fontWeight: 600,
                   color: 'var(--text-primary)',
                   whiteSpace: 'nowrap',
@@ -242,7 +260,7 @@ export const Sidebar: React.FC = () => {
 
           <button
             onClick={handleSignOut}
-            title="Sign Out / Switch Account"
+            title="Sign Out"
             style={{
               background: 'transparent',
               border: 'none',
@@ -258,7 +276,7 @@ export const Sidebar: React.FC = () => {
             onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--status-urgent)')}
             onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--text-muted)')}
           >
-            <LogOut size={16} />
+            <LogOut size={15} />
           </button>
         </div>
       </div>

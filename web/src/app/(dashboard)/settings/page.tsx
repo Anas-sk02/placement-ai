@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Settings, Bell, Shield, Key, Save, Radio } from 'lucide-react';
+import { Bell, Save, Radio } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { useToast } from '@/components/ui/Toast';
 
@@ -9,35 +9,36 @@ export default function SettingsPage() {
   const { success } = useToast();
   const [autoRunInsights, setAutoRunInsights] = useState(true);
   const [pushEnabled, setPushEnabled] = useState(true);
-  const [offsets, setOffsets] = useState([24, 6, 1]);
 
   const handleSave = () => {
     success('Settings Saved', 'Notification offsets and worker preferences updated');
   };
 
   return (
-    <div className="page-container" style={{ maxWidth: '800px' }}>
-      <div style={{ marginBottom: '28px' }}>
-        <h1 style={{ fontSize: '24px', fontWeight: 800 }}>Preferences & Settings</h1>
+    <div className="page-container" style={{ maxWidth: '780px' }}>
+      <div style={{ marginBottom: '32px' }}>
+        <h1 style={{ fontSize: '24px', fontWeight: 700, letterSpacing: '-0.02em' }}>
+          Settings & Preferences
+        </h1>
         <p style={{ fontSize: '13.5px', color: 'var(--text-secondary)', marginTop: '4px' }}>
-          Configure worker ingestion rules, AI extraction provider, and deadline reminder offsets
+          Configure ingestion triggers, reminder intervals, and background daemon preferences
         </p>
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
         {/* Notifications Card */}
-        <div className="glass-card" style={{ padding: '24px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
-            <Bell size={20} color="var(--primary-light)" />
-            <h2 style={{ fontSize: '16px', fontWeight: 700 }}>Deadline Reminder Offsets</h2>
+        <div className="glass-card" style={{ padding: '24px', backgroundColor: '#111624' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '18px' }}>
+            <Bell size={18} color="var(--primary-light)" />
+            <h2 style={{ fontSize: '15px', fontWeight: 700 }}>Deadline Reminder Offsets</h2>
           </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <div>
-                <div style={{ fontSize: '14px', fontWeight: 600 }}>Web Push Alerts</div>
+                <div style={{ fontSize: '13.5px', fontWeight: 600 }}>Browser Push Notifications</div>
                 <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
-                  Receive browser notifications when deadlines enter urgent window
+                  Receive prompt reminders when deadlines enter urgent 24h/6h windows
                 </div>
               </div>
               <label className="switch">
@@ -50,11 +51,11 @@ export default function SettingsPage() {
               </label>
             </div>
 
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: '10px', borderTop: '1px solid var(--border-subtle)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: '12px', borderTop: '1px solid var(--border-subtle)' }}>
               <div>
-                <div style={{ fontSize: '14px', fontWeight: 600 }}>Automatic AI Extraction</div>
+                <div style={{ fontSize: '13.5px', fontWeight: 600 }}>Automatic Notice Parsing</div>
                 <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
-                  Immediately parse incoming Telegram notices from monitored channels
+                  Extract placement criteria immediately when Telegram broadcasts arrive
                 </div>
               </div>
               <label className="switch">
@@ -70,21 +71,21 @@ export default function SettingsPage() {
         </div>
 
         {/* Worker Daemon Card */}
-        <div className="glass-card" style={{ padding: '24px' }}>
+        <div className="glass-card" style={{ padding: '24px', backgroundColor: '#111624' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
-            <Radio size={20} color="var(--status-eligible)" />
-            <h2 style={{ fontSize: '16px', fontWeight: 700 }}>Python MTProto Worker Health</h2>
+            <Radio size={18} color="var(--status-eligible)" />
+            <h2 style={{ fontSize: '15px', fontWeight: 700 }}>Worker Daemon Engine</h2>
           </div>
 
-          <div style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
-            <div><strong>Status:</strong> <span style={{ color: 'var(--status-eligible)' }}>Operational (Connected to Telegram DC5)</span></div>
-            <div style={{ marginTop: '4px' }}><strong>Monitored Unions:</strong> 4 Telegram groups</div>
-            <div style={{ marginTop: '4px' }}><strong>Encryption:</strong> AES-256-GCM Session Key Verified</div>
+          <div style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: 1.7 }}>
+            <div><span style={{ color: 'var(--text-muted)' }}>Daemon State:</span> <strong style={{ color: 'var(--status-eligible)', fontWeight: 600 }}>Operational & Ingesting</strong></div>
+            <div><span style={{ color: 'var(--text-muted)' }}>Extraction Engine:</span> Dual-Engine (Gemini 2.5 Flash + Fallback Regex)</div>
+            <div><span style={{ color: 'var(--text-muted)' }}>Security Protocol:</span> AES-256 Authenticated Session</div>
           </div>
         </div>
 
-        <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-          <Button variant="primary" size="md" onClick={handleSave} leftIcon={<Save size={16} />}>
+        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '4px' }}>
+          <Button variant="primary" size="md" onClick={handleSave} leftIcon={<Save size={15} />}>
             Save Preferences
           </Button>
         </div>

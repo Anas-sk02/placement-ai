@@ -442,7 +442,7 @@ export default function DashboardPage() {
               <div style={{ fontSize: '14.5px', fontWeight: 700, color: 'var(--text-primary)' }}>
                 {urgentDeadline.title || `${urgentDeadline.company_name} Application Closing Soon`}
               </div>
-              <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '2px' }}>
+              <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '2px' }} suppressHydrationWarning>
                 Deadline: {new Date(urgentDeadline.deadline_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} • Automated reminders active
               </div>
             </div>

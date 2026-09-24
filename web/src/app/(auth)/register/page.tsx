@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { GraduationCap, ArrowRight, Lock, Mail, User, AlertCircle, PlayCircle } from 'lucide-react';
+import { GraduationCap, ArrowRight, Lock, Mail, User, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { createClient } from '@/lib/supabase/client';
 
@@ -40,7 +40,7 @@ export default function RegisterPage() {
 
       if (error) {
         if (error.message.toLowerCase().includes('rate limit')) {
-          setErrorMsg('Supabase email rate limit reached. Tip: In Supabase Dashboard -> Authentication -> Providers -> Email, turn OFF "Confirm email" to enable instant signups without rate limits.');
+          setErrorMsg('Email rate limit reached. Turn off "Confirm email" in Supabase Auth to enable instant onboarding.');
         } else {
           setErrorMsg(error.message);
         }
@@ -48,7 +48,6 @@ export default function RegisterPage() {
       }
 
       if (data.user) {
-        // Upsert student profile row
         try {
           await (supabase.from('student_profiles') as any).upsert({
             user_id: data.user.id,
@@ -64,7 +63,7 @@ export default function RegisterPage() {
             skills: ['Java', 'Python', 'Web Development'],
           }, { onConflict: 'user_id' });
         } catch {
-          // Profile trigger handles it if direct insert is blocked by RLS
+          // Fallback handled by DB defaults
         }
 
         router.push('/dashboard');
@@ -88,35 +87,40 @@ export default function RegisterPage() {
         alignItems: 'center',
         justifyContent: 'center',
         padding: '24px',
+        backgroundColor: '#07090e',
       }}
     >
       <div
         className="glass-card"
         style={{
           width: '100%',
-          maxWidth: '500px',
+          maxWidth: '480px',
           padding: '36px',
+          backgroundColor: '#111624',
+          borderRadius: '12px',
         }}
       >
         <div style={{ textAlign: 'center', marginBottom: '24px' }}>
           <div
             style={{
-              width: '46px',
-              height: '46px',
-              borderRadius: '14px',
+              width: '42px',
+              height: '42px',
+              borderRadius: '10px',
               background: 'var(--brand-gradient)',
               display: 'inline-flex',
               alignItems: 'center',
               justifyContent: 'center',
               marginBottom: '12px',
-              boxShadow: 'var(--primary-glow)',
+              boxShadow: '0 2px 10px rgba(37, 99, 235, 0.3)',
             }}
           >
-            <GraduationCap size={26} color="#ffffff" />
+            <GraduationCap size={22} color="#ffffff" />
           </div>
-          <h1 style={{ fontSize: '22px', fontWeight: 800 }}>Student Registration</h1>
-          <p style={{ fontSize: '13px', color: 'var(--text-muted)', marginTop: '4px' }}>
-            Set up your placement profile for eligibility automation
+          <h1 style={{ fontSize: '20px', fontWeight: 700, letterSpacing: '-0.02em' }}>
+            Create Student Account
+          </h1>
+          <p style={{ fontSize: '12.5px', color: 'var(--text-muted)', marginTop: '4px' }}>
+            Set up your placement profile for deterministic eligibility matching
           </p>
         </div>
 
@@ -125,17 +129,17 @@ export default function RegisterPage() {
             style={{
               backgroundColor: 'var(--status-urgent-bg)',
               border: '1px solid var(--status-urgent-border)',
-              borderRadius: '8px',
-              padding: '12px 14px',
+              borderRadius: '6px',
+              padding: '10px 12px',
               display: 'flex',
               alignItems: 'flex-start',
-              gap: '10px',
-              color: 'var(--status-urgent)',
-              fontSize: '13px',
-              marginBottom: '18px',
+              gap: '8px',
+              color: '#f87171',
+              fontSize: '12.5px',
+              marginBottom: '16px',
             }}
           >
-            <AlertCircle size={16} style={{ marginTop: '2px', flexShrink: 0 }} />
+            <AlertCircle size={15} style={{ marginTop: '2px', flexShrink: 0 }} />
             <span>{errorMsg}</span>
           </div>
         )}
@@ -145,9 +149,9 @@ export default function RegisterPage() {
             <label className="form-label">Full Name</label>
             <div style={{ position: 'relative' }}>
               <User
-                size={16}
+                size={15}
                 color="var(--text-muted)"
-                style={{ position: 'absolute', left: 14, top: 13 }}
+                style={{ position: 'absolute', left: 12, top: 12 }}
               />
               <input
                 type="text"
@@ -156,7 +160,7 @@ export default function RegisterPage() {
                 className="input-field"
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
-                style={{ paddingLeft: '38px' }}
+                style={{ paddingLeft: '34px' }}
               />
             </div>
           </div>
@@ -165,9 +169,9 @@ export default function RegisterPage() {
             <label className="form-label">College Email Address</label>
             <div style={{ position: 'relative' }}>
               <Mail
-                size={16}
+                size={15}
                 color="var(--text-muted)"
-                style={{ position: 'absolute', left: 14, top: 13 }}
+                style={{ position: 'absolute', left: 12, top: 12 }}
               />
               <input
                 type="email"
@@ -176,7 +180,7 @@ export default function RegisterPage() {
                 className="input-field"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                style={{ paddingLeft: '38px' }}
+                style={{ paddingLeft: '34px' }}
               />
             </div>
           </div>
@@ -229,19 +233,19 @@ export default function RegisterPage() {
             <label className="form-label">Password</label>
             <div style={{ position: 'relative' }}>
               <Lock
-                size={16}
+                size={15}
                 color="var(--text-muted)"
-                style={{ position: 'absolute', left: 14, top: 13 }}
+                style={{ position: 'absolute', left: 12, top: 12 }}
               />
               <input
                 type="password"
                 required
                 minLength={6}
-                placeholder="Create secure password (min 6 chars)"
+                placeholder="Create password (min 6 characters)"
                 className="input-field"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                style={{ paddingLeft: '38px' }}
+                style={{ paddingLeft: '34px' }}
               />
             </div>
           </div>
@@ -251,10 +255,10 @@ export default function RegisterPage() {
             variant="primary"
             size="lg"
             isLoading={loading}
-            style={{ width: '100%', marginTop: '10px' }}
-            rightIcon={<ArrowRight size={16} />}
+            style={{ width: '100%', marginTop: '6px' }}
+            rightIcon={<ArrowRight size={15} />}
           >
-            Create My Placement Account
+            Create Account
           </Button>
         </form>
 
@@ -262,7 +266,7 @@ export default function RegisterPage() {
           style={{
             textAlign: 'center',
             marginTop: '20px',
-            fontSize: '13px',
+            fontSize: '12.5px',
             color: 'var(--text-muted)',
           }}
         >

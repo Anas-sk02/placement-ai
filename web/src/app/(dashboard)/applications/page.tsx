@@ -3,31 +3,24 @@
 import React, { useState } from 'react';
 import {
   KanbanSquare,
-  Building2,
-  Calendar,
-  CheckCircle2,
-  Clock,
   Plus,
   ChevronRight,
-  Sparkles,
   Trash2,
   FileText,
-  X,
 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
-import { Badge } from '@/components/ui/Badge';
 import { Modal } from '@/components/ui/Modal';
 import { useApplications, ApplicationItem } from '@/lib/hooks/useApplications';
 import { ApplicationStatusEnum } from '@/types/database.types';
 import { useToast } from '@/components/ui/Toast';
 
-const COLUMNS: { id: ApplicationStatusEnum; title: string; color: string }[] = [
-  { id: 'SAVED', title: 'Saved Drives', color: '#94a3b8' },
-  { id: 'APPLIED', title: 'Applied', color: '#38bdf8' },
-  { id: 'ASSESSMENT', title: 'Online Test (OA)', color: '#f59e0b' },
-  { id: 'INTERVIEW', title: 'Interviews', color: '#a855f7' },
-  { id: 'SELECTED', title: 'Selected / Offer 🎉', color: '#10b981' },
-  { id: 'REJECTED', title: 'Archived', color: '#64748b' },
+const COLUMNS: { id: ApplicationStatusEnum; title: string; color: string; bgBadge: string }[] = [
+  { id: 'SAVED', title: 'Saved Drives', color: '#94a3b8', bgBadge: 'rgba(148, 163, 184, 0.1)' },
+  { id: 'APPLIED', title: 'Applied', color: '#60a5fa', bgBadge: 'rgba(96, 165, 250, 0.1)' },
+  { id: 'ASSESSMENT', title: 'Online Test (OA)', color: '#fbbf24', bgBadge: 'rgba(251, 191, 36, 0.1)' },
+  { id: 'INTERVIEW', title: 'Interviews', color: '#c084fc', bgBadge: 'rgba(192, 132, 252, 0.1)' },
+  { id: 'SELECTED', title: 'Offer Received', color: '#34d399', bgBadge: 'rgba(52, 211, 153, 0.1)' },
+  { id: 'REJECTED', title: 'Archived', color: '#64748b', bgBadge: 'rgba(100, 116, 139, 0.1)' },
 ];
 
 export default function ApplicationsKanbanPage() {
@@ -48,9 +41,9 @@ export default function ApplicationsKanbanPage() {
       const nextCol = order[idx + 1];
       updateApplicationStatus(appId, nextCol);
       if (nextCol === 'SELECTED') {
-        success('Congratulations! 🎉', `Marked as Selected / Offer for this drive!`);
+        success('Offer Celebrations! 🎉', `Marked as Selected / Offer Received!`);
       } else {
-        success('Application Advanced', `Moved to ${nextCol}`);
+        success('Application Moved', `Advanced to ${nextCol}`);
       }
     }
   };
@@ -68,7 +61,7 @@ export default function ApplicationsKanbanPage() {
     setNewCompany('');
     setNewRole('');
     setNewNotes('');
-    success('Application Added', 'Track your interview progress on the Kanban board');
+    success('Application Added', 'Track your drive lifecycle on the pipeline');
   };
 
   return (
@@ -79,15 +72,17 @@ export default function ApplicationsKanbanPage() {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          marginBottom: '28px',
+          marginBottom: '32px',
           flexWrap: 'wrap',
           gap: '16px',
         }}
       >
         <div>
-          <h1 style={{ fontSize: '24px', fontWeight: 800 }}>Placement Application Kanban Tracker</h1>
+          <h1 style={{ fontSize: '24px', fontWeight: 700, letterSpacing: '-0.02em' }}>
+            Application Pipeline
+          </h1>
           <p style={{ fontSize: '13.5px', color: 'var(--text-secondary)', marginTop: '4px' }}>
-            Lifecycle tracker synced with Supabase PostgreSQL • Confetti celebrations on Offer
+            Track campus and off-campus recruitment stages in real time
           </p>
         </div>
 
@@ -95,9 +90,9 @@ export default function ApplicationsKanbanPage() {
           variant="primary"
           size="md"
           onClick={() => setIsAddModalOpen(true)}
-          leftIcon={<Plus size={16} />}
+          leftIcon={<Plus size={15} />}
         >
-          Add Application
+          Track Application
         </Button>
       </div>
 
@@ -105,8 +100,8 @@ export default function ApplicationsKanbanPage() {
       <div
         style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-          gap: '16px',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
+          gap: '18px',
           alignItems: 'start',
         }}
       >
@@ -117,11 +112,11 @@ export default function ApplicationsKanbanPage() {
             <div
               key={col.id}
               style={{
-                backgroundColor: 'rgba(13, 17, 30, 0.7)',
+                backgroundColor: '#0c0f17',
                 border: '1px solid var(--border-subtle)',
-                borderRadius: '12px',
+                borderRadius: '10px',
                 padding: '16px',
-                minHeight: '450px',
+                minHeight: '480px',
                 display: 'flex',
                 flexDirection: 'column',
                 gap: '12px',
@@ -133,20 +128,31 @@ export default function ApplicationsKanbanPage() {
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'space-between',
-                  paddingBottom: '10px',
-                  borderBottom: `2px solid ${col.color}`,
+                  paddingBottom: '12px',
+                  borderBottom: '1px solid var(--border-subtle)',
                 }}
               >
-                <div style={{ fontSize: '13px', fontWeight: 700, color: col.color }}>
-                  {col.title}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span
+                    style={{
+                      width: '8px',
+                      height: '8px',
+                      borderRadius: '50%',
+                      backgroundColor: col.color,
+                    }}
+                  />
+                  <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)' }}>
+                    {col.title}
+                  </span>
                 </div>
                 <span
                   style={{
                     fontSize: '11px',
-                    fontWeight: 700,
-                    padding: '2px 8px',
+                    fontWeight: 600,
+                    padding: '1px 7px',
                     borderRadius: '999px',
-                    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                    backgroundColor: col.bgBadge,
+                    color: col.color,
                   }}
                 >
                   {colApps.length}
@@ -155,73 +161,121 @@ export default function ApplicationsKanbanPage() {
 
               {/* Cards list */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                {colApps.map((app) => (
+                {colApps.length === 0 ? (
                   <div
-                    key={app.id}
-                    className="glass-card"
                     style={{
-                      padding: '14px',
-                      borderRadius: '10px',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      gap: '8px',
-                      borderLeft: `3px solid ${col.color}`,
+                      textAlign: 'center',
+                      padding: '36px 12px',
+                      color: 'var(--text-muted)',
+                      fontSize: '12px',
+                      border: '1px dashed var(--border-subtle)',
+                      borderRadius: '8px',
                     }}
                   >
-                    <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
-                      <strong style={{ fontSize: '14px', color: '#ffffff' }}>
-                        {app.company_name}
-                      </strong>
-                      <button
-                        onClick={() => deleteApplication(app.id)}
-                        style={{ color: 'var(--text-muted)', padding: '2px' }}
-                        title="Remove from tracker"
-                      >
-                        <Trash2 size={13} />
-                      </button>
-                    </div>
-
-                    <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
-                      {app.role_title}
-                    </div>
-
-                    {app.notes && (
-                      <div
-                        style={{
-                          fontSize: '11.5px',
-                          color: 'var(--text-muted)',
-                          backgroundColor: 'rgba(255, 255, 255, 0.03)',
-                          padding: '6px 8px',
-                          borderRadius: '6px',
-                        }}
-                      >
-                        {app.notes}
-                      </div>
-                    )}
-
-                    {col.id !== 'SELECTED' && col.id !== 'REJECTED' && (
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '6px', paddingTop: '6px', borderTop: '1px solid var(--border-subtle)' }}>
-                        <button
-                          onClick={() => setActiveNoteApp(app)}
-                          style={{ fontSize: '11px', color: 'var(--primary-light)', display: 'flex', alignItems: 'center', gap: 4 }}
-                        >
-                          <FileText size={12} />
-                          Notes
-                        </button>
-
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => moveNext(app.id, col.id)}
-                          rightIcon={<ChevronRight size={13} />}
-                          style={{ fontSize: '11px', padding: '3px 8px' }}
-                        >
-                          Next Stage
-                        </Button>
-                      </div>
-                    )}
+                    No drives in this stage
                   </div>
-                ))}
+                ) : (
+                  colApps.map((app) => (
+                    <div
+                      key={app.id}
+                      className="glass-card"
+                      style={{
+                        padding: '16px',
+                        borderRadius: '8px',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '8px',
+                        backgroundColor: '#111624',
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '8px' }}>
+                        <strong style={{ fontSize: '13.5px', color: 'var(--text-primary)', fontWeight: 600 }}>
+                          {app.company_name}
+                        </strong>
+                        <button
+                          onClick={() => deleteApplication(app.id)}
+                          style={{
+                            color: 'var(--text-muted)',
+                            padding: '3px',
+                            background: 'transparent',
+                            border: 'none',
+                            cursor: 'pointer',
+                          }}
+                          title="Remove from pipeline"
+                          onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--status-urgent)')}
+                          onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--text-muted)')}
+                        >
+                          <Trash2 size={13} />
+                        </button>
+                      </div>
+
+                      <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
+                        {app.role_title}
+                      </div>
+
+                      {app.notes && (
+                        <div
+                          style={{
+                            fontSize: '11.5px',
+                            color: 'var(--text-muted)',
+                            backgroundColor: '#090c13',
+                            border: '1px solid var(--border-subtle)',
+                            padding: '6px 8px',
+                            borderRadius: '6px',
+                            lineHeight: 1.4,
+                          }}
+                        >
+                          {app.notes}
+                        </div>
+                      )}
+
+                      {col.id !== 'SELECTED' && col.id !== 'REJECTED' && (
+                        <div
+                          style={{
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                            marginTop: '4px',
+                            paddingTop: '8px',
+                            borderTop: '1px solid var(--border-subtle)',
+                          }}
+                        >
+                          <button
+                            onClick={() => setActiveNoteApp(app)}
+                            style={{
+                              fontSize: '11.5px',
+                              color: 'var(--primary-light)',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: 4,
+                              background: 'transparent',
+                              border: 'none',
+                              cursor: 'pointer',
+                            }}
+                          >
+                            <FileText size={12} />
+                            Notes
+                          </button>
+
+                          <button
+                            className="btn btn-secondary btn-sm"
+                            onClick={() => moveNext(app.id, col.id)}
+                            style={{
+                              fontSize: '11px',
+                              padding: '3px 8px',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '3px',
+                            }}
+                          >
+                            <span>Advance</span>
+                            <ChevronRight size={12} />
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  ))
+                )}
               </div>
             </div>
           );
@@ -236,7 +290,7 @@ export default function ApplicationsKanbanPage() {
             <input
               type="text"
               required
-              placeholder="e.g. Goldman Sachs, Google"
+              placeholder="e.g. Goldman Sachs, Microsoft, Google"
               className="input-field"
               value={newCompany}
               onChange={(e) => setNewCompany(e.target.value)}
@@ -247,7 +301,7 @@ export default function ApplicationsKanbanPage() {
             <label className="form-label">Role Title</label>
             <input
               type="text"
-              placeholder="e.g. Summer Analyst / SDE-1"
+              placeholder="e.g. Software Engineer / Summer Analyst"
               className="input-field"
               value={newRole}
               onChange={(e) => setNewRole(e.target.value)}
@@ -257,7 +311,7 @@ export default function ApplicationsKanbanPage() {
           <div className="form-group">
             <label className="form-label">Application Notes / Round Details</label>
             <textarea
-              placeholder="e.g. Applied on college form, test on Sunday..."
+              placeholder="e.g. Online Assessment scheduled for Sunday..."
               className="input-field"
               rows={3}
               value={newNotes}
@@ -265,12 +319,12 @@ export default function ApplicationsKanbanPage() {
             />
           </div>
 
-          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '8px' }}>
             <Button variant="ghost" size="md" type="button" onClick={() => setIsAddModalOpen(false)}>
               Cancel
             </Button>
             <Button variant="primary" size="md" type="submit">
-              Save to Board
+              Save to Pipeline
             </Button>
           </div>
         </form>
@@ -286,7 +340,7 @@ export default function ApplicationsKanbanPage() {
               defaultValue={activeNoteApp.notes || ''}
               id="appNoteInput"
             />
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '8px' }}>
               <Button variant="ghost" size="md" onClick={() => setActiveNoteApp(null)}>
                 Close
               </Button>
@@ -299,7 +353,7 @@ export default function ApplicationsKanbanPage() {
                     addApplication({ ...activeNoteApp, notes: val });
                   }
                   setActiveNoteApp(null);
-                  success('Notes Saved', 'Updated application log');
+                  success('Notes Saved', 'Updated application details');
                 }}
               >
                 Save Notes

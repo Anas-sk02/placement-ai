@@ -2,14 +2,10 @@
 
 import React, { useState, useEffect } from 'react';
 import {
-  UserCheck,
   Save,
   CheckCircle2,
   XCircle,
-  AlertTriangle,
-  GraduationCap,
   Sparkles,
-  RefreshCw,
 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
@@ -18,8 +14,8 @@ import { evaluateEligibility } from '@/lib/business/eligibility-checker';
 import { useToast } from '@/components/ui/Toast';
 
 export default function ProfilePage() {
-  const { profile, loading, saveProfile } = useStudentProfile();
-  const { success, error } = useToast();
+  const { profile, saveProfile } = useStudentProfile();
+  const { success } = useToast();
 
   const [formData, setFormData] = useState(profile);
   const [isSaving, setIsSaving] = useState(false);
@@ -47,7 +43,7 @@ export default function ProfilePage() {
     const ok = await saveProfile(formData);
     setIsSaving(false);
     if (ok) {
-      success('Profile Saved to Supabase', 'Eligibility rules across all notices have been refreshed');
+      success('Profile Saved', 'Eligibility engine parameters updated across all notices');
     } else {
       success('Profile Saved Locally', 'Updated student eligibility parameters');
     }
@@ -61,15 +57,17 @@ export default function ProfilePage() {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          marginBottom: '28px',
+          marginBottom: '32px',
           flexWrap: 'wrap',
           gap: '16px',
         }}
       >
         <div>
-          <h1 style={{ fontSize: '24px', fontWeight: 800 }}>Student Placement Profile</h1>
+          <h1 style={{ fontSize: '24px', fontWeight: 700, letterSpacing: '-0.02em' }}>
+            Student Placement Profile
+          </h1>
           <p style={{ fontSize: '13.5px', color: 'var(--text-secondary)', marginTop: '4px' }}>
-            Academic credentials synced directly with Supabase for 100% deterministic eligibility evaluation
+            Academic credentials evaluated deterministically against live recruiter criteria
           </p>
         </div>
       </div>
@@ -82,12 +80,12 @@ export default function ProfilePage() {
         }}
       >
         {/* Profile Edit Form */}
-        <div className="glass-card" style={{ padding: '28px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
-            <h2 style={{ fontSize: '17px', fontWeight: 700 }}>
+        <div className="glass-card" style={{ padding: '28px', backgroundColor: '#111624' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px' }}>
+            <h2 style={{ fontSize: '16px', fontWeight: 700 }}>
               Academic Credentials
             </h2>
-            <Badge variant="eligible">Supabase Synced</Badge>
+            <Badge variant="eligible">Database Active</Badge>
           </div>
 
           <form onSubmit={handleSaveProfile}>
@@ -102,7 +100,7 @@ export default function ProfilePage() {
             </div>
 
             <div className="form-group">
-              <label className="form-label">College / University Name</label>
+              <label className="form-label">College / Institute</label>
               <input
                 type="text"
                 className="input-field"
@@ -124,11 +122,12 @@ export default function ProfilePage() {
                   <option value="2025">2025</option>
                   <option value="2026">2026</option>
                   <option value="2027">2027</option>
+                  <option value="2028">2028</option>
                 </select>
               </div>
 
               <div className="form-group">
-                <label className="form-label">Branch</label>
+                <label className="form-label">Branch / Major</label>
                 <input
                   type="text"
                   className="input-field"
@@ -145,7 +144,7 @@ export default function ProfilePage() {
                   type="number"
                   step="0.01"
                   className="input-field"
-                  value={formData.cgpa || 8.42}
+                  value={formData.cgpa || 8.0}
                   onChange={(e) =>
                     setFormData({ ...formData, cgpa: parseFloat(e.target.value) })
                   }
@@ -165,30 +164,30 @@ export default function ProfilePage() {
               </div>
             </div>
 
-            <div style={{ marginTop: '14px' }}>
+            <div style={{ marginTop: '16px' }}>
               <Button
                 variant="primary"
                 size="md"
                 type="submit"
                 isLoading={isSaving}
-                leftIcon={<Save size={16} />}
+                leftIcon={<Save size={15} />}
               >
-                Save & Update Eligibility
+                Save Credentials
               </Button>
             </div>
           </form>
         </div>
 
         {/* Live Simulator Card */}
-        <div className="glass-card" style={{ padding: '28px' }}>
+        <div className="glass-card" style={{ padding: '28px', backgroundColor: '#111624' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
-            <Sparkles size={20} color="var(--primary-light)" />
-            <h2 style={{ fontSize: '17px', fontWeight: 700 }}>
-              Live Deterministic Eligibility Simulator
+            <Sparkles size={18} color="var(--primary-light)" />
+            <h2 style={{ fontSize: '16px', fontWeight: 700 }}>
+              Live Eligibility Simulator
             </h2>
           </div>
           <p style={{ fontSize: '13px', color: 'var(--text-muted)', marginBottom: '20px' }}>
-            Simulate how different company placement criteria match against your credentials:
+            Simulate how recruiter cutoffs evaluate against your current academic metrics:
           </p>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
@@ -204,7 +203,7 @@ export default function ProfilePage() {
             </div>
 
             <div className="form-group" style={{ marginBottom: 0 }}>
-              <label className="form-label">Eligible Branches (comma separated)</label>
+              <label className="form-label">Allowed Branches (Comma separated)</label>
               <input
                 type="text"
                 className="input-field"
@@ -218,7 +217,7 @@ export default function ProfilePage() {
               style={{
                 marginTop: '12px',
                 padding: '16px',
-                borderRadius: '10px',
+                borderRadius: '8px',
                 backgroundColor:
                   simResult.status === 'ELIGIBLE'
                     ? 'var(--status-eligible-bg)'
@@ -232,24 +231,24 @@ export default function ProfilePage() {
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
                 {simResult.status === 'ELIGIBLE' ? (
-                  <CheckCircle2 size={18} color="var(--status-eligible)" />
+                  <CheckCircle2 size={16} color="var(--status-eligible)" />
                 ) : (
-                  <XCircle size={18} color="var(--status-urgent)" />
+                  <XCircle size={16} color="var(--status-urgent)" />
                 )}
                 <strong
                   style={{
-                    fontSize: '15px',
+                    fontSize: '14px',
                     color:
                       simResult.status === 'ELIGIBLE'
                         ? 'var(--status-eligible)'
                         : 'var(--status-urgent)',
                   }}
                 >
-                  {simResult.status === 'ELIGIBLE' ? '100% Eligible for this Drive' : 'Not Eligible'}
+                  {simResult.status === 'ELIGIBLE' ? '100% Eligible for this Drive' : 'Criteria Not Met'}
                 </strong>
               </div>
 
-              <ul style={{ fontSize: '12px', color: 'var(--text-secondary)', paddingLeft: '20px' }}>
+              <ul style={{ fontSize: '12px', color: 'var(--text-secondary)', paddingLeft: '20px', margin: 0 }}>
                 {simResult.reasons.map((r, i) => (
                   <li key={i}>{r}</li>
                 ))}

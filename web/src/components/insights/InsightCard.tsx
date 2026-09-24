@@ -2,14 +2,10 @@
 
 import React from 'react';
 import {
-  Briefcase,
   Building2,
-  Calendar,
-  Clock,
   ExternalLink,
   Eye,
   PlusCircle,
-  Sparkles,
   CheckCircle2,
   XCircle,
   AlertTriangle,
@@ -50,35 +46,38 @@ export const InsightCard: React.FC<InsightCardProps> = ({
     <div
       className="glass-card"
       style={{
-        padding: '22px',
+        padding: '24px',
         display: 'flex',
         flexDirection: 'column',
-        gap: '16px',
+        gap: '18px',
       }}
     >
       {/* Top Company & Type Row */}
-      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '12px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '14px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
           <div
             style={{
-              width: '44px',
-              height: '44px',
-              borderRadius: '12px',
-              backgroundColor: 'rgba(99, 102, 241, 0.15)',
-              border: '1px solid rgba(99, 102, 241, 0.3)',
+              width: '42px',
+              height: '42px',
+              borderRadius: '8px',
+              backgroundColor: '#161d2f',
+              border: '1px solid var(--border-medium)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               color: 'var(--primary-light)',
+              flexShrink: 0,
             }}
           >
-            <Building2 size={22} />
+            <Building2 size={20} />
           </div>
           <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <h3 style={{ fontSize: '17px', fontWeight: 700 }}>{insight.company_name}</h3>
-              <Badge variant="primary" style={{ fontSize: '10px' }}>
-                {insight.opportunity_type}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+              <h3 style={{ fontSize: '16px', fontWeight: 700, letterSpacing: '-0.01em' }}>
+                {insight.company_name}
+              </h3>
+              <Badge variant="primary" style={{ fontSize: '10.5px' }}>
+                {insight.opportunity_type || 'DRIVE'}
               </Badge>
             </div>
             <div style={{ fontSize: '13px', color: 'var(--text-secondary)', marginTop: '2px' }}>
@@ -90,13 +89,13 @@ export const InsightCard: React.FC<InsightCardProps> = ({
         {/* Urgency or Eligibility Indicator */}
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '6px' }}>
           <Badge urgency={insight.urgency} pulsing={insight.urgency === 'CRITICAL'}>
-            {insight.urgency === 'CRITICAL' ? '🔥 Closing Soon' : `${insight.urgency} Urgency`}
+            {insight.urgency === 'CRITICAL' ? 'Closing Soon' : `${insight.urgency || 'ACTIVE'}`}
           </Badge>
 
           {eligibility && (
             <Badge
               eligibility={eligibility.status}
-              style={{ fontSize: '10.5px', textTransform: 'none' }}
+              style={{ fontSize: '11px', textTransform: 'none' }}
               title={eligibility.reasons.join('\n')}
             >
               {eligibility.status === 'ELIGIBLE' && <CheckCircle2 size={12} style={{ marginRight: 4 }} />}
@@ -113,38 +112,38 @@ export const InsightCard: React.FC<InsightCardProps> = ({
         style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))',
-          gap: '10px',
-          padding: '12px 14px',
-          backgroundColor: 'rgba(10, 14, 26, 0.6)',
-          borderRadius: '10px',
+          gap: '12px',
+          padding: '14px 16px',
+          backgroundColor: '#0d111a',
+          borderRadius: '8px',
           border: '1px solid var(--border-subtle)',
           fontSize: '12.5px',
         }}
       >
         <div>
-          <div style={{ color: 'var(--text-muted)', fontSize: '11px' }}>CTC / Stipend</div>
-          <div style={{ fontWeight: 700, color: 'var(--status-eligible)' }}>
+          <div style={{ color: 'var(--text-muted)', fontSize: '11px', marginBottom: '2px' }}>CTC / Stipend</div>
+          <div style={{ fontWeight: 600, color: 'var(--status-eligible)' }}>
             {insight.salary_or_stipend || 'Competitive'}
           </div>
         </div>
 
         <div>
-          <div style={{ color: 'var(--text-muted)', fontSize: '11px' }}>Min CGPA</div>
-          <div style={{ fontWeight: 700, color: 'var(--status-info)' }}>
+          <div style={{ color: 'var(--text-muted)', fontSize: '11px', marginBottom: '2px' }}>Min CGPA</div>
+          <div style={{ fontWeight: 600, color: 'var(--text-primary)' }}>
             {insight.min_cgpa ? `${insight.min_cgpa} Cutoff` : 'No Cutoff'}
           </div>
         </div>
 
         <div>
-          <div style={{ color: 'var(--text-muted)', fontSize: '11px' }}>Eligible Batch</div>
+          <div style={{ color: 'var(--text-muted)', fontSize: '11px', marginBottom: '2px' }}>Eligible Batch</div>
           <div style={{ fontWeight: 600, color: 'var(--text-primary)' }}>
             {insight.batch_year || '2026'}
           </div>
         </div>
 
         <div>
-          <div style={{ color: 'var(--text-muted)', fontSize: '11px' }}>Deadline</div>
-          <div style={{ fontWeight: 700, color: 'var(--status-urgent)' }} suppressHydrationWarning>
+          <div style={{ color: 'var(--text-muted)', fontSize: '11px', marginBottom: '2px' }}>Deadline</div>
+          <div style={{ fontWeight: 600, color: 'var(--status-urgent)' }} suppressHydrationWarning>
             {insight.registration_deadline
               ? new Date(insight.registration_deadline).toLocaleDateString(undefined, {
                   month: 'short',
@@ -152,19 +151,19 @@ export const InsightCard: React.FC<InsightCardProps> = ({
                   hour: '2-digit',
                   minute: '2-digit',
                 })
-              : 'Tonight 11:59 PM'}
+              : 'As Announced'}
           </div>
         </div>
       </div>
 
       {/* Target Branches & Telegram Source */}
-      <div style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <div style={{ fontSize: '12.5px', color: 'var(--text-secondary)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
-          <span style={{ color: 'var(--text-muted)' }}>Branches: </span>
-          <span>{insight.allowed_branches?.join(', ') || 'All Engineering Branches'}</span>
+          <span style={{ color: 'var(--text-muted)' }}>Allowed Branches: </span>
+          <span>{insight.allowed_branches?.join(', ') || 'All Branches'}</span>
         </div>
-        <div style={{ color: 'var(--text-muted)', fontSize: '11px' }}>
-          Source: {insight.group_name || 'Telegram Channel'}
+        <div style={{ color: 'var(--text-muted)', fontSize: '11.5px' }}>
+          {insight.group_name || 'Campus Telegram'}
         </div>
       </div>
 
@@ -174,8 +173,8 @@ export const InsightCard: React.FC<InsightCardProps> = ({
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          gap: '8px',
-          paddingTop: '8px',
+          gap: '10px',
+          paddingTop: '12px',
           borderTop: '1px solid var(--border-subtle)',
           flexWrap: 'wrap',
         }}
@@ -184,12 +183,12 @@ export const InsightCard: React.FC<InsightCardProps> = ({
           variant="ghost"
           size="sm"
           onClick={() => onViewRaw(insight)}
-          leftIcon={<Eye size={14} />}
+          leftIcon={<Eye size={13} />}
         >
           View Source
         </Button>
 
-        <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
           {onSaveToKanban && (
             <Button
               variant="secondary"
@@ -197,7 +196,7 @@ export const InsightCard: React.FC<InsightCardProps> = ({
               onClick={() => onSaveToKanban(insight)}
               leftIcon={<KanbanSquare size={13} />}
             >
-              Save to Tracker
+              Save Application
             </Button>
           )}
 
@@ -205,7 +204,7 @@ export const InsightCard: React.FC<InsightCardProps> = ({
             variant="secondary"
             size="sm"
             onClick={() => onTrackDeadline(insight)}
-            leftIcon={<PlusCircle size={14} />}
+            leftIcon={<PlusCircle size={13} />}
           >
             Track Deadline
           </Button>
@@ -219,9 +218,9 @@ export const InsightCard: React.FC<InsightCardProps> = ({
               <Button
                 variant="primary"
                 size="sm"
-                rightIcon={<ExternalLink size={14} />}
+                rightIcon={<ExternalLink size={13} />}
               >
-                Apply Link
+                Apply Direct
               </Button>
             </a>
           )}

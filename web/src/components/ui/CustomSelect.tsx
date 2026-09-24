@@ -85,25 +85,23 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
           justifyContent: 'space-between',
           gap: '8px',
           padding: '8px 12px',
-          borderRadius: '8px',
+          borderRadius: '7px',
           backgroundColor: isSelectedActive
-            ? 'rgba(99, 102, 241, 0.12)'
-            : 'rgba(255, 255, 255, 0.04)',
+            ? 'rgba(37, 99, 235, 0.1)'
+            : '#0d111a',
           border: `1px solid ${
             isOpen
               ? 'var(--primary)'
               : isSelectedActive
-              ? 'rgba(99, 102, 241, 0.4)'
-              : 'var(--border-medium)'
+              ? 'rgba(59, 130, 246, 0.4)'
+              : 'var(--border-subtle)'
           }`,
-          boxShadow: isOpen
-            ? '0 0 15px rgba(99, 102, 241, 0.25)'
-            : 'none',
+          boxShadow: '0 1px 2px rgba(0, 0, 0, 0.2)',
           color: isSelectedActive ? '#ffffff' : 'var(--text-primary)',
-          fontSize: '13px',
-          fontWeight: isSelectedActive ? 600 : 400,
+          fontSize: '12.5px',
+          fontWeight: isSelectedActive ? 600 : 450,
           cursor: 'pointer',
-          transition: 'all 0.18s cubic-bezier(0.16, 1, 0.3, 1)',
+          transition: 'all 0.15s ease',
           outline: 'none',
         }}
       >
@@ -126,11 +124,11 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
           {selectedOption?.count !== undefined && (
             <span
               style={{
-                fontSize: '11px',
-                padding: '1px 6px',
-                borderRadius: '10px',
-                backgroundColor: isSelectedActive ? 'rgba(99, 102, 241, 0.3)' : 'rgba(255, 255, 255, 0.08)',
-                color: isSelectedActive ? 'var(--primary-light)' : 'var(--text-muted)',
+                fontSize: '10.5px',
+                padding: '1px 5px',
+                borderRadius: '4px',
+                backgroundColor: isSelectedActive ? 'rgba(59, 130, 246, 0.2)' : 'rgba(255, 255, 255, 0.06)',
+                color: isSelectedActive ? '#93c5fd' : 'var(--text-muted)',
                 fontWeight: 600,
               }}
             >
@@ -140,38 +138,36 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
         </div>
 
         <ChevronDown
-          size={15}
+          size={14}
           style={{
             color: isSelectedActive ? 'var(--primary-light)' : 'var(--text-muted)',
-            transition: 'transform 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
+            transition: 'transform 0.15s ease',
             transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)',
             flexShrink: 0,
           }}
         />
       </button>
 
-      {/* Glassmorphic Dropdown Popover */}
+      {/* Solid Luxury Dropdown Popover */}
       {isOpen && (
         <div
           style={{
             position: 'absolute',
-            top: 'calc(100% + 6px)',
+            top: 'calc(100% + 4px)',
             [align]: 0,
             zIndex: 99999,
             minWidth: '220px',
             maxWidth: '340px',
             maxHeight: '300px',
             overflowY: 'auto',
-            backgroundColor: '#0c1024',
-            border: '1px solid rgba(99, 102, 241, 0.4)',
-            borderRadius: '10px',
-            boxShadow: '0 20px 50px -10px rgba(0, 0, 0, 0.95), 0 0 20px rgba(99, 102, 241, 0.2)',
-            backdropFilter: 'blur(20px)',
-            padding: '6px',
+            backgroundColor: '#111624',
+            border: '1px solid var(--border-medium)',
+            borderRadius: '8px',
+            boxShadow: 'var(--shadow-modal)',
+            padding: '5px',
             display: 'flex',
             flexDirection: 'column',
-            gap: '3px',
-            animation: 'dropdownFadeIn 0.15s cubic-bezier(0.16, 1, 0.3, 1)',
+            gap: '2px',
           }}
         >
           {options.map((opt) => {
@@ -188,20 +184,20 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
                   alignItems: 'center',
                   justifyContent: 'space-between',
                   gap: '10px',
-                  padding: '9px 12px',
-                  borderRadius: '7px',
-                  fontSize: '13px',
+                  padding: '8px 10px',
+                  borderRadius: '6px',
+                  fontSize: '12.5px',
                   fontWeight: isOptSelected ? 600 : 400,
                   color: isOptSelected ? '#ffffff' : 'var(--text-secondary)',
                   backgroundColor: isOptSelected
-                    ? 'rgba(99, 102, 241, 0.25)'
+                    ? 'rgba(37, 99, 235, 0.15)'
                     : 'transparent',
                   cursor: 'pointer',
-                  transition: 'all 0.12s ease',
+                  transition: 'all 0.1s ease',
                 }}
                 onMouseEnter={(e) => {
                   if (!isOptSelected) {
-                    e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.06)';
+                    e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.05)';
                     e.currentTarget.style.color = '#ffffff';
                   }
                 }}
@@ -233,12 +229,12 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
                   {opt.count !== undefined && (
                     <span
                       style={{
-                        fontSize: '11px',
-                        padding: '2px 7px',
-                        borderRadius: '10px',
+                        fontSize: '10.5px',
+                        padding: '1px 5px',
+                        borderRadius: '4px',
                         backgroundColor: isOptSelected
-                          ? 'rgba(99, 102, 241, 0.4)'
-                          : 'rgba(255, 255, 255, 0.08)',
+                          ? 'rgba(59, 130, 246, 0.25)'
+                          : 'rgba(255, 255, 255, 0.06)',
                         color: isOptSelected ? '#ffffff' : 'var(--text-muted)',
                         fontWeight: 600,
                       }}
@@ -246,7 +242,7 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
                       {opt.count}
                     </span>
                   )}
-                  {isOptSelected && <Check size={14} color="var(--primary-light)" />}
+                  {isOptSelected && <Check size={13} color="var(--primary-light)" />}
                 </div>
               </div>
             );

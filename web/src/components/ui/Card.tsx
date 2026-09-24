@@ -11,6 +11,7 @@ export const Card: React.FC<CardProps> = ({
   hoverable = true,
   glow = false,
   className,
+  style,
   ...props
 }) => {
   return (
@@ -18,12 +19,12 @@ export const Card: React.FC<CardProps> = ({
       className={clsx(
         'glass-card',
         hoverable && 'cursor-pointer',
-        glow && 'border-indigo-500/30',
+        glow && 'border-blue-500/30',
         className
       )}
       style={{
-        padding: '20px',
-        ...props.style,
+        padding: '24px',
+        ...style,
       }}
       {...props}
     >

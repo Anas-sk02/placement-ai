@@ -5,12 +5,8 @@ import {
   Building2,
   ExternalLink,
   Search,
-  Briefcase,
-  TrendingUp,
   MapPin,
   Sparkles,
-  ArrowRight,
-  PlusCircle,
 } from 'lucide-react';
 import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
@@ -69,28 +65,30 @@ export default function CompaniesPage() {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          marginBottom: '28px',
+          marginBottom: '32px',
           flexWrap: 'wrap',
           gap: '16px',
         }}
       >
         <div>
-          <h1 style={{ fontSize: '24px', fontWeight: 800 }}>Company Directory & CTC Benchmark Hub</h1>
+          <h1 style={{ fontSize: '24px', fontWeight: 700, letterSpacing: '-0.02em' }}>
+            Company Directory
+          </h1>
           <p style={{ fontSize: '13.5px', color: 'var(--text-secondary)', marginTop: '4px' }}>
-            Placement packages, cutoffs, and hiring patterns for top engineering recruiters
+            Verified placement packages, CGPA cutoffs, and hiring criteria
           </p>
         </div>
 
         {/* Search */}
-        <div style={{ position: 'relative', width: '320px' }}>
-          <Search size={16} color="var(--text-muted)" style={{ position: 'absolute', left: 14, top: 12 }} />
+        <div style={{ position: 'relative', width: '300px' }}>
+          <Search size={15} color="var(--text-muted)" style={{ position: 'absolute', left: 12, top: 12 }} />
           <input
             type="text"
             placeholder="Search company, role, or location..."
             className="input-field"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            style={{ paddingLeft: '38px', borderRadius: '999px', paddingTop: '8px', paddingBottom: '8px' }}
+            style={{ paddingLeft: '34px' }}
           />
         </div>
       </div>
@@ -100,36 +98,37 @@ export default function CompaniesPage() {
         <div
           className="glass-card"
           style={{
-            padding: '48px 24px',
+            padding: '56px 24px',
             textAlign: 'center',
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
             justifyContent: 'center',
             gap: '16px',
+            backgroundColor: '#111624',
           }}
         >
           <div
             style={{
-              width: '56px',
-              height: '56px',
-              borderRadius: '16px',
-              backgroundColor: 'rgba(99, 102, 241, 0.1)',
-              border: '1px solid rgba(99, 102, 241, 0.25)',
+              width: '48px',
+              height: '48px',
+              borderRadius: '10px',
+              backgroundColor: '#161d2f',
+              border: '1px solid var(--border-medium)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
             }}
           >
-            <Building2 size={28} color="var(--primary-light)" />
+            <Building2 size={24} color="var(--primary-light)" />
           </div>
 
           <div>
-            <h3 style={{ fontSize: '18px', fontWeight: 700, marginBottom: '6px' }}>
-              No Companies Registered Yet
+            <h3 style={{ fontSize: '16px', fontWeight: 700, marginBottom: '6px' }}>
+              No Companies Found
             </h3>
-            <p style={{ fontSize: '13.5px', color: 'var(--text-muted)', maxWidth: '460px', margin: '0 auto' }}>
-              When placement drives are announced or notices are ingested, participating companies will populate this directory.
+            <p style={{ fontSize: '13px', color: 'var(--text-muted)', maxWidth: '440px', margin: '0 auto' }}>
+              Ingested recruitment notices will automatically index recruiter profiles here.
             </p>
           </div>
         </div>
@@ -137,112 +136,108 @@ export default function CompaniesPage() {
         <div
           style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))',
             gap: '20px',
           }}
         >
-        {filtered.map((company) => (
-          <div
-            key={company.id}
-            className="glass-card"
-            style={{
-              padding: '24px',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '16px',
-            }}
-          >
-            {/* Company Title */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <div
-                  style={{
-                    width: '44px',
-                    height: '44px',
-                    borderRadius: '12px',
-                    backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                    border: '1px solid var(--border-subtle)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}
-                >
-                  <Building2 size={22} color="var(--primary-light)" />
-                </div>
-                <div>
-                  <h3 style={{ fontSize: '17px', fontWeight: 700 }}>{company.name}</h3>
-                  <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{company.domain}</div>
-                </div>
-              </div>
-
-              <Badge variant="eligible" style={{ fontSize: '11px' }}>
-                {company.typical_ctc}
-              </Badge>
-            </div>
-
-            {/* Metrics */}
-            <div
-              style={{
-                backgroundColor: 'rgba(10, 14, 26, 0.6)',
-                padding: '12px 14px',
-                borderRadius: '10px',
-                border: '1px solid var(--border-subtle)',
-                display: 'grid',
-                gridTemplateColumns: '1fr 1fr',
-                gap: '10px',
-                fontSize: '12.5px',
-              }}
-            >
-              <div>
-                <span style={{ color: 'var(--text-muted)', fontSize: '11px', display: 'block' }}>Min Cutoff</span>
-                <strong style={{ color: 'var(--status-info)' }}>{company.min_cgpa} CGPA</strong>
-              </div>
-              <div>
-                <span style={{ color: 'var(--text-muted)', fontSize: '11px', display: 'block' }}>Hiring Drive</span>
-                <span style={{ color: 'var(--text-primary)', fontWeight: 500 }}>{company.hiring_frequency}</span>
-              </div>
-            </div>
-
-            {/* Roles */}
-            <div>
-              <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '6px' }}>
-                Target Placement Roles:
-              </div>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
-                {(company.roles || []).map((r) => (
-                  <span
-                    key={r}
+          {filtered.map((c) => (
+            <Card key={c.id} hoverable={true} style={{ display: 'flex', flexDirection: 'column', gap: '16px', backgroundColor: '#111624' }}>
+              <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '12px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <div
                     style={{
-                      fontSize: '11px',
-                      padding: '3px 8px',
-                      borderRadius: '6px',
-                      backgroundColor: 'rgba(99, 102, 241, 0.1)',
-                      color: 'var(--text-secondary)',
-                      border: '1px solid rgba(99, 102, 241, 0.2)',
+                      width: '40px',
+                      height: '40px',
+                      borderRadius: '8px',
+                      backgroundColor: '#161d2f',
+                      border: '1px solid var(--border-medium)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: 'var(--primary-light)',
+                      flexShrink: 0,
                     }}
                   >
-                    {r}
+                    <Building2 size={20} />
+                  </div>
+
+                  <div>
+                    <h3 style={{ fontSize: '15px', fontWeight: 700 }}>{c.name}</h3>
+                    <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{c.domain}</div>
+                  </div>
+                </div>
+
+                <Badge variant="primary" style={{ fontSize: '10.5px' }}>
+                  Min {c.min_cgpa} CGPA
+                </Badge>
+              </div>
+
+              {/* Roles & Package */}
+              <div
+                style={{
+                  padding: '12px 14px',
+                  borderRadius: '6px',
+                  backgroundColor: '#0d111a',
+                  border: '1px solid var(--border-subtle)',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  fontSize: '12.5px',
+                }}
+              >
+                <div>
+                  <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Typical CTC</div>
+                  <div style={{ fontWeight: 600, color: 'var(--status-eligible)' }}>{c.typical_ctc}</div>
+                </div>
+
+                <div style={{ textAlign: 'right' }}>
+                  <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Cycle</div>
+                  <div style={{ color: 'var(--text-secondary)' }}>{c.hiring_frequency}</div>
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                {c.roles?.map((role, idx) => (
+                  <span
+                    key={idx}
+                    style={{
+                      fontSize: '11.5px',
+                      padding: '2px 8px',
+                      borderRadius: '4px',
+                      backgroundColor: 'rgba(255, 255, 255, 0.04)',
+                      border: '1px solid var(--border-subtle)',
+                      color: 'var(--text-secondary)',
+                    }}
+                  >
+                    {role}
                   </span>
                 ))}
               </div>
-            </div>
 
-            {/* Location */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: 'var(--text-muted)' }}>
-              <MapPin size={14} />
-              <span>{company.locations}</span>
-            </div>
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  paddingTop: '12px',
+                  borderTop: '1px solid var(--border-subtle)',
+                  fontSize: '12px',
+                  color: 'var(--text-muted)',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <MapPin size={13} />
+                  <span>{c.locations}</span>
+                </div>
 
-            {/* Footer */}
-            <div style={{ paddingTop: '10px', borderTop: '1px solid var(--border-subtle)', display: 'flex', justifyContent: 'flex-end' }}>
-              <a href={company.career_portal_url} target="_blank" rel="noopener noreferrer">
-                <Button variant="secondary" size="sm" rightIcon={<ExternalLink size={14} />}>
-                  Official Career Portal
-                </Button>
-              </a>
-            </div>
-          </div>
-        ))}
+                <a href={c.career_portal_url} target="_blank" rel="noopener noreferrer">
+                  <Button variant="secondary" size="sm" rightIcon={<ExternalLink size={12} />}>
+                    Careers Portal
+                  </Button>
+                </a>
+              </div>
+            </Card>
+          ))}
         </div>
       )}
     </div>

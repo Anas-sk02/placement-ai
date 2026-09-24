@@ -7,12 +7,9 @@ import {
   Award,
   Target,
   Clock,
-  Sparkles,
   BookOpen,
-  CheckCircle2,
   ChevronRight,
   ExternalLink,
-  Layers,
 } from 'lucide-react';
 import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
@@ -140,15 +137,17 @@ export default function AnalyticsPage() {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          marginBottom: '28px',
+          marginBottom: '32px',
           flexWrap: 'wrap',
           gap: '16px',
         }}
       >
         <div>
-          <h1 style={{ fontSize: '24px', fontWeight: 800 }}>Placement Analytics & Preparation Hub</h1>
+          <h1 style={{ fontSize: '24px', fontWeight: 700, letterSpacing: '-0.02em' }}>
+            Placement Analytics & Preparation
+          </h1>
           <p style={{ fontSize: '13.5px', color: 'var(--text-secondary)', marginTop: '4px' }}>
-            Application conversion funnels, benchmark CTC metrics, and tailored company roadmaps
+            Recruitment funnel conversion rates, benchmark compensation tiers, and company roadmaps
           </p>
         </div>
       </div>
@@ -162,55 +161,55 @@ export default function AnalyticsPage() {
           marginBottom: '32px',
         }}
       >
-        <Card hoverable={false}>
+        <Card hoverable={false} style={{ backgroundColor: '#111624' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <span style={{ fontSize: '13px', color: 'var(--text-muted)' }}>Tracked Applications</span>
-            <TrendingUp size={18} color="var(--status-eligible)" />
+            <span style={{ fontSize: '12.5px', color: 'var(--text-muted)' }}>Tracked Pipeline</span>
+            <TrendingUp size={16} color="var(--primary-light)" />
           </div>
-          <div style={{ fontSize: '28px', fontWeight: 800, marginTop: '8px', color: 'var(--status-eligible)' }}>
+          <div style={{ fontSize: '24px', fontWeight: 700, marginTop: '8px', color: 'var(--text-primary)' }}>
             {totalDrives} Drives
           </div>
-          <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '4px' }}>
-            Active on your Kanban board
+          <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '2px' }}>
+            In pipeline
           </div>
         </Card>
 
-        <Card hoverable={false}>
+        <Card hoverable={false} style={{ backgroundColor: '#111624' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <span style={{ fontSize: '13px', color: 'var(--text-muted)' }}>Offers Secured</span>
-            <Award size={18} color="#ec4899" />
+            <span style={{ fontSize: '12.5px', color: 'var(--text-muted)' }}>Offers Secured</span>
+            <Award size={16} color="var(--status-eligible)" />
           </div>
-          <div style={{ fontSize: '28px', fontWeight: 800, marginTop: '8px', color: '#ec4899' }}>
+          <div style={{ fontSize: '24px', fontWeight: 700, marginTop: '8px', color: 'var(--status-eligible)' }}>
             {offerCount} {offerCount === 1 ? 'Offer' : 'Offers'}
           </div>
-          <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '4px' }}>
-            {offerCount > 0 ? 'Congratulations! 🎉' : 'In active recruitment cycles'}
+          <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '2px' }}>
+            {offerCount > 0 ? 'Selected' : 'In evaluation'}
           </div>
         </Card>
 
-        <Card hoverable={false}>
+        <Card hoverable={false} style={{ backgroundColor: '#111624' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <span style={{ fontSize: '13px', color: 'var(--text-muted)' }}>Placement Profile</span>
-            <Target size={18} color="var(--primary-light)" />
+            <span style={{ fontSize: '12.5px', color: 'var(--text-muted)' }}>Academic Standing</span>
+            <Target size={16} color="var(--primary-light)" />
           </div>
-          <div style={{ fontSize: '28px', fontWeight: 800, marginTop: '8px', color: 'var(--primary-light)' }}>
+          <div style={{ fontSize: '24px', fontWeight: 700, marginTop: '8px', color: 'var(--text-primary)' }}>
             {profile.cgpa || 8.0} CGPA
           </div>
-          <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '4px' }}>
-            {profile.branch || 'CSE'} Batch of {profile.graduation_year || 2028}
+          <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '2px' }}>
+            {profile.branch || 'CSE'} Batch of {profile.graduation_year || 2026}
           </div>
         </Card>
 
-        <Card hoverable={false}>
+        <Card hoverable={false} style={{ backgroundColor: '#111624' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <span style={{ fontSize: '13px', color: 'var(--text-muted)' }}>Interview Conversion</span>
-            <Clock size={18} color="var(--status-info)" />
+            <span style={{ fontSize: '12.5px', color: 'var(--text-muted)' }}>Interview Conversion</span>
+            <Clock size={16} color="var(--status-info)" />
           </div>
-          <div style={{ fontSize: '28px', fontWeight: 800, marginTop: '8px', color: 'var(--status-info)' }}>
+          <div style={{ fontSize: '24px', fontWeight: 700, marginTop: '8px', color: 'var(--status-info)' }}>
             {getPct(interviewCount)}% Rate
           </div>
-          <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '4px' }}>
-            {interviewCount} Advanced to Technical/HR
+          <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '2px' }}>
+            {interviewCount} In Interviews
           </div>
         </Card>
       </div>
@@ -224,41 +223,42 @@ export default function AnalyticsPage() {
         }}
       >
         {/* Application Funnel Card */}
-        <div className="glass-card" style={{ padding: '24px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
-            <BarChart3 size={20} color="var(--primary-light)" />
-            <h2 style={{ fontSize: '16px', fontWeight: 700 }}>Application Conversion Funnel</h2>
+        <div className="glass-card" style={{ padding: '24px', backgroundColor: '#111624' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px' }}>
+            <BarChart3 size={18} color="var(--primary-light)" />
+            <h2 style={{ fontSize: '16px', fontWeight: 700 }}>Conversion Funnel</h2>
           </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
             {[
-              { label: 'Tracked on Kanban', count: totalDrives, pct: 100, color: 'var(--primary)' },
-              { label: 'Applied on Form / Portal', count: appliedCount, pct: getPct(appliedCount), color: '#38bdf8' },
-              { label: 'Online Assessments (OA)', count: oaCount, pct: getPct(oaCount), color: '#f59e0b' },
-              { label: 'Technical Interviews', count: interviewCount, pct: getPct(interviewCount), color: '#a855f7' },
-              { label: 'Offers Received 🎉', count: offerCount, pct: getPct(offerCount), color: '#10b981' },
+              { label: 'Tracked on Kanban', count: totalDrives, pct: 100, color: 'var(--primary-light)' },
+              { label: 'Applied on Form / Portal', count: appliedCount, pct: getPct(appliedCount), color: '#60a5fa' },
+              { label: 'Online Assessments (OA)', count: oaCount, pct: getPct(oaCount), color: '#fbbf24' },
+              { label: 'Technical Interviews', count: interviewCount, pct: getPct(interviewCount), color: '#c084fc' },
+              { label: 'Offers Received', count: offerCount, pct: getPct(offerCount), color: '#34d399' },
             ].map((f) => (
               <div key={f.label}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12.5px', marginBottom: '4px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12.5px', marginBottom: '6px' }}>
                   <span style={{ color: 'var(--text-primary)', fontWeight: 500 }}>{f.label}</span>
                   <strong style={{ color: f.color }}>{f.count} ({totalDrives > 0 ? f.pct : 0}%)</strong>
                 </div>
                 <div
                   style={{
                     width: '100%',
-                    height: '8px',
+                    height: '6px',
                     borderRadius: '999px',
-                    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                    backgroundColor: '#0a0d15',
+                    border: '1px solid var(--border-subtle)',
                     overflow: 'hidden',
                   }}
                 >
                   <div
                     style={{
-                      width: `${totalDrives > 0 ? Math.max(5, f.pct) : 0}%`,
+                      width: `${totalDrives > 0 ? Math.max(4, f.pct) : 0}%`,
                       height: '100%',
                       backgroundColor: f.color,
                       borderRadius: '999px',
-                      transition: 'width 0.5s ease-out',
+                      transition: 'width 0.4s ease-out',
                     }}
                   />
                 </div>
@@ -268,54 +268,18 @@ export default function AnalyticsPage() {
         </div>
 
         {/* Compensation Tiers Breakdown */}
-        <div className="glass-card" style={{ padding: '24px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
-            <Award size={20} color="#ec4899" />
+        <div className="glass-card" style={{ padding: '24px', backgroundColor: '#111624' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px' }}>
+            <Award size={18} color="var(--primary-light)" />
             <h2 style={{ fontSize: '16px', fontWeight: 700 }}>Package Tier Distribution</h2>
           </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
             <div
               style={{
                 padding: '14px 16px',
-                borderRadius: '10px',
-                backgroundColor: 'rgba(236, 72, 153, 0.1)',
-                border: '1px solid rgba(236, 72, 153, 0.3)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-              }}
-            >
-              <div>
-                <strong style={{ fontSize: '14px', color: '#ec4899' }}>Super Dream Tier (&gt; ₹30 LPA)</strong>
-                <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Microsoft, Amazon, Uber, Atlassian</div>
-              </div>
-              <div style={{ fontSize: '20px', fontWeight: 800, color: '#ffffff' }}>8 Drives</div>
-            </div>
-
-            <div
-              style={{
-                padding: '14px 16px',
-                borderRadius: '10px',
-                backgroundColor: 'rgba(99, 102, 241, 0.1)',
-                border: '1px solid rgba(99, 102, 241, 0.3)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-              }}
-            >
-              <div>
-                <strong style={{ fontSize: '14px', color: 'var(--primary-light)' }}>Dream Tier (₹15 - 30 LPA)</strong>
-                <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Goldman Sachs, Cisco, Oracle, Morgan Stanley</div>
-              </div>
-              <div style={{ fontSize: '20px', fontWeight: 800, color: '#ffffff' }}>18 Drives</div>
-            </div>
-
-            <div
-              style={{
-                padding: '14px 16px',
-                borderRadius: '10px',
-                backgroundColor: 'rgba(255, 255, 255, 0.03)',
+                borderRadius: '8px',
+                backgroundColor: '#0d111a',
                 border: '1px solid var(--border-subtle)',
                 display: 'flex',
                 alignItems: 'center',
@@ -323,113 +287,190 @@ export default function AnalyticsPage() {
               }}
             >
               <div>
-                <strong style={{ fontSize: '14px', color: 'var(--text-primary)' }}>Standard Tier (&lt; ₹15 LPA)</strong>
-                <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Mass Recruiters, Early Tech Startups</div>
+                <strong style={{ fontSize: '13.5px', color: '#60a5fa' }}>Super Dream (&gt; ₹30 LPA)</strong>
+                <div style={{ fontSize: '11.5px', color: 'var(--text-muted)' }}>Microsoft, Amazon, Uber, Atlassian</div>
               </div>
-              <div style={{ fontSize: '20px', fontWeight: 800, color: '#ffffff' }}>12 Drives</div>
+              <div style={{ fontSize: '16px', fontWeight: 700, color: 'var(--text-primary)' }}>Tier 1</div>
+            </div>
+
+            <div
+              style={{
+                padding: '14px 16px',
+                borderRadius: '8px',
+                backgroundColor: '#0d111a',
+                border: '1px solid var(--border-subtle)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+              }}
+            >
+              <div>
+                <strong style={{ fontSize: '13.5px', color: '#34d399' }}>Dream Tier (₹15 - 30 LPA)</strong>
+                <div style={{ fontSize: '11.5px', color: 'var(--text-muted)' }}>Goldman Sachs, Oracle, Cisco, Qualcomm</div>
+              </div>
+              <div style={{ fontSize: '16px', fontWeight: 700, color: 'var(--text-primary)' }}>Tier 2</div>
+            </div>
+
+            <div
+              style={{
+                padding: '14px 16px',
+                borderRadius: '8px',
+                backgroundColor: '#0d111a',
+                border: '1px solid var(--border-subtle)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+              }}
+            >
+              <div>
+                <strong style={{ fontSize: '13.5px', color: '#cbd5e1' }}>Standard Core (&lt; ₹15 LPA)</strong>
+                <div style={{ fontSize: '11.5px', color: 'var(--text-muted)' }}>TCS Digital, Infosys SP, Cognizant, Wipro</div>
+              </div>
+              <div style={{ fontSize: '16px', fontWeight: 700, color: 'var(--text-primary)' }}>Tier 3</div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* AI Interview Preparation Roadmaps */}
+      {/* Recruiter Prep Guides */}
       <div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
-          <Sparkles size={20} color="var(--primary-light)" />
-          <h2 style={{ fontSize: '18px', fontWeight: 700 }}>
-            AI-Tailored Company Interview Preparation Roadmaps
-          </h2>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '18px' }}>
+          <BookOpen size={18} color="var(--primary-light)" />
+          <h2 style={{ fontSize: '17px', fontWeight: 700 }}>Company Specific Interview Preparation</h2>
         </div>
 
         <div
           style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))',
-            gap: '20px',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+            gap: '18px',
           }}
         >
-          {PREP_GUIDES.map((guide) => (
-            <div
-              key={guide.company}
-              className="glass-card"
-              style={{
-                padding: '24px',
-                display: 'flex',
-                flexDirection: 'column',
-                justifyContent: 'space-between',
-                gap: '16px',
-              }}
+          {PREP_GUIDES.map((g) => (
+            <Card
+              key={g.company}
+              hoverable={true}
+              onClick={() => setSelectedPrepGuide(g)}
+              style={{ display: 'flex', flexDirection: 'column', gap: '12px', backgroundColor: '#111624' }}
             >
-              <div>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <h3 style={{ fontSize: '17px', fontWeight: 700 }}>{guide.company}</h3>
-                  <Badge variant="eligible">{guide.ctc}</Badge>
-                </div>
-                <div style={{ fontSize: '12.5px', color: 'var(--text-secondary)', marginBottom: '14px' }}>
-                  {guide.role}
-                </div>
-
-                <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '6px' }}>
-                  Core Interview Focus Areas:
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                  {guide.focusTopics.map((topic, i) => (
-                    <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12.5px', color: 'var(--text-primary)' }}>
-                      <CheckCircle2 size={13} color="var(--status-eligible)" />
-                      <span>{topic}</span>
-                    </div>
-                  ))}
-                </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <h3 style={{ fontSize: '15px', fontWeight: 700 }}>{g.company}</h3>
+                <span
+                  style={{
+                    fontSize: '11px',
+                    fontWeight: 600,
+                    color: 'var(--status-eligible)',
+                  }}
+                >
+                  {g.ctc}
+                </span>
               </div>
 
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={() => setSelectedPrepGuide(guide)}
-                rightIcon={<ChevronRight size={14} />}
-                style={{ width: '100%', marginTop: '8px' }}
+              <div style={{ fontSize: '12.5px', color: 'var(--text-muted)' }}>{g.role}</div>
+
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', marginTop: '4px' }}>
+                {g.focusTopics.slice(0, 2).map((t, idx) => (
+                  <span
+                    key={idx}
+                    style={{
+                      fontSize: '11px',
+                      padding: '2px 7px',
+                      borderRadius: '4px',
+                      backgroundColor: '#0a0d15',
+                      border: '1px solid var(--border-subtle)',
+                      color: 'var(--text-secondary)',
+                    }}
+                  >
+                    {t.split('(')[0].trim()}
+                  </span>
+                ))}
+              </div>
+
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  marginTop: '6px',
+                  paddingTop: '8px',
+                  borderTop: '1px solid var(--border-subtle)',
+                  fontSize: '12px',
+                  color: 'var(--primary-light)',
+                  fontWeight: 500,
+                }}
               >
-                View Full Interview Roadmap
-              </Button>
-            </div>
+                <span>View Full Roadmap</span>
+                <ChevronRight size={13} />
+              </div>
+            </Card>
           ))}
         </div>
       </div>
 
-      {/* Prep Guide Modal */}
+      {/* Roadmap Detail Modal */}
       {selectedPrepGuide && (
         <Modal
           isOpen={Boolean(selectedPrepGuide)}
           onClose={() => setSelectedPrepGuide(null)}
-          title={`Interview Roadmap: ${selectedPrepGuide.company}`}
-          maxWidth="640px"
+          title={`${selectedPrepGuide.company} — Placement Preparation Roadmap`}
         >
           <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
+            <div
+              style={{
+                padding: '12px 14px',
+                borderRadius: '6px',
+                backgroundColor: '#0d111a',
+                border: '1px solid var(--border-subtle)',
+                display: 'flex',
+                justifyContent: 'space-between',
+              }}
+            >
+              <div>
+                <div style={{ fontSize: '11.5px', color: 'var(--text-muted)' }}>Role</div>
+                <div style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{selectedPrepGuide.role}</div>
+              </div>
+              <div style={{ textAlign: 'right' }}>
+                <div style={{ fontSize: '11.5px', color: 'var(--text-muted)' }}>Package Tier</div>
+                <div style={{ fontWeight: 600, color: 'var(--status-eligible)' }}>{selectedPrepGuide.ctc}</div>
+              </div>
+            </div>
+
             <div>
-              <h4 style={{ fontSize: '14px', fontWeight: 700, color: 'var(--primary-light)', marginBottom: '8px' }}>
-                Hiring Rounds & Evaluation Format
+              <h4 style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '8px' }}>
+                Interview Rounds Breakdown
               </h4>
-              <ul style={{ fontSize: '13px', color: 'var(--text-secondary)', paddingLeft: '20px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                {selectedPrepGuide.rounds.map((r, idx) => (
-                  <li key={idx}>{r}</li>
+              <ul style={{ fontSize: '12.5px', color: 'var(--text-secondary)', paddingLeft: '18px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                {selectedPrepGuide.rounds.map((r, i) => (
+                  <li key={i}>{r}</li>
                 ))}
               </ul>
             </div>
 
             <div>
-              <h4 style={{ fontSize: '14px', fontWeight: 700, color: 'var(--status-info)', marginBottom: '8px' }}>
-                Recommended DSA & System Practice
+              <h4 style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '8px' }}>
+                Key Technical Focus Topics
               </h4>
-              <ul style={{ fontSize: '13px', color: 'var(--text-secondary)', paddingLeft: '20px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                {selectedPrepGuide.recommendedPractice.map((p, idx) => (
-                  <li key={idx}>{p}</li>
+              <ul style={{ fontSize: '12.5px', color: 'var(--text-secondary)', paddingLeft: '18px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                {selectedPrepGuide.focusTopics.map((t, i) => (
+                  <li key={i}>{t}</li>
                 ))}
               </ul>
             </div>
 
-            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '10px' }}>
+            <div>
+              <h4 style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '8px' }}>
+                Recommended Practice Sets
+              </h4>
+              <ul style={{ fontSize: '12.5px', color: 'var(--text-secondary)', paddingLeft: '18px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                {selectedPrepGuide.recommendedPractice.map((p, i) => (
+                  <li key={i}>{p}</li>
+                ))}
+              </ul>
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '6px' }}>
               <Button variant="primary" size="md" onClick={() => setSelectedPrepGuide(null)}>
-                Got it
+                Got It
               </Button>
             </div>
           </div>

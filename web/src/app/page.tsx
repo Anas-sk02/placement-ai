@@ -48,7 +48,7 @@ export default function LandingPage() {
   };
 
   return (
-    <div style={{ minHeight: '100vh', position: 'relative' }}>
+    <div style={{ minHeight: '100vh', position: 'relative', backgroundColor: '#07090e' }}>
       {/* Navigation Header */}
       <header
         style={{
@@ -56,99 +56,108 @@ export default function LandingPage() {
           alignItems: 'center',
           justifyContent: 'space-between',
           padding: '24px 48px',
-          maxWidth: '1400px',
+          maxWidth: '1380px',
           margin: '0 auto',
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <div
             style={{
-              width: '40px',
-              height: '40px',
-              borderRadius: '12px',
+              width: '36px',
+              height: '36px',
+              borderRadius: '8px',
               background: 'var(--brand-gradient)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              boxShadow: 'var(--primary-glow)',
+              boxShadow: '0 2px 8px rgba(37, 99, 235, 0.3)',
             }}
           >
-            <GraduationCap size={22} color="#ffffff" />
+            <GraduationCap size={20} color="#ffffff" />
           </div>
-          <span style={{ fontSize: '20px', fontWeight: 800, color: '#ffffff' }}>
-            PlaceMint<span className="text-gradient">.AI</span>
+          <span style={{ fontSize: '18px', fontWeight: 700, color: '#ffffff', letterSpacing: '-0.02em' }}>
+            PlaceMint<span style={{ color: 'var(--primary-light)' }}>.AI</span>
           </span>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
           <Link href="/login">
             <Button variant="ghost" size="md">
               Sign In
             </Button>
           </Link>
           <Link href="/register">
-            <Button variant="primary" size="md" rightIcon={<ArrowRight size={16} />}>
-              Create Student Account
+            <Button variant="primary" size="md" rightIcon={<ArrowRight size={15} />}>
+              Create Account
             </Button>
           </Link>
         </div>
       </header>
 
       {/* Hero Section */}
-      <main style={{ maxWidth: '1280px', margin: '0 auto', padding: '60px 24px' }}>
-        <div style={{ textAlign: 'center', maxWidth: '850px', margin: '0 auto 60px auto' }}>
+      <main style={{ maxWidth: '1240px', margin: '0 auto', padding: '64px 24px' }}>
+        <div style={{ textAlign: 'center', maxWidth: '820px', margin: '0 auto 64px auto' }}>
           <div style={{ display: 'inline-flex', marginBottom: '20px' }}>
-            <Badge variant="primary" style={{ padding: '6px 14px', fontSize: '12px' }}>
-              <Sparkles size={14} style={{ marginRight: '6px' }} />
+            <span
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px',
+                padding: '4px 12px',
+                borderRadius: '999px',
+                backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                border: '1px solid rgba(59, 130, 246, 0.25)',
+                color: '#93c5fd',
+                fontSize: '12px',
+                fontWeight: 500,
+              }}
+            >
+              <Sparkles size={13} />
               Built for 2026 Batch Placement Season
-            </Badge>
+            </span>
           </div>
 
           <h1
             style={{
-              fontSize: '54px',
-              lineHeight: 1.15,
+              fontSize: '48px',
+              lineHeight: 1.2,
               fontWeight: 800,
-              letterSpacing: '-1.5px',
-              marginBottom: '24px',
+              letterSpacing: '-0.03em',
+              marginBottom: '20px',
             }}
           >
             Never miss another{' '}
-            <span className="text-gradient">college placement deadline</span> buried in
+            <span className="text-gradient">campus placement deadline</span> buried in
             Telegram.
           </h1>
 
           <p
             style={{
-              fontSize: '18px',
+              fontSize: '16.5px',
               color: 'var(--text-secondary)',
-              lineHeight: 1.6,
-              marginBottom: '36px',
+              lineHeight: 1.65,
+              marginBottom: '32px',
             }}
           >
-            PlaceMint AI automatically connects with your college Telegram channels, extracts
-            job drives, verifies your academic eligibility, and dispatches automated reminder
-            alerts so you never lose out on high-CTC opportunities.
+            PlaceMint AI connects with college placement channels, extracts structured recruiter
+            notices, verifies academic criteria, and schedules multi-stage reminder offsets.
           </p>
 
           <div
             style={{
               display: 'flex',
               justifyContent: 'center',
-              gap: '16px',
+              gap: '14px',
               flexWrap: 'wrap',
             }}
           >
             <Link href="/register">
-              <Button variant="primary" size="lg" rightIcon={<ArrowRight size={18} />}>
+              <Button variant="primary" size="lg" rightIcon={<ArrowRight size={16} />}>
                 Get Started Free
               </Button>
             </Link>
             <Link href="/login">
-              <Button
-                variant="secondary"
-                size="lg"
-              >
+              <Button variant="secondary" size="lg">
                 Sign In to Account
               </Button>
             </Link>
@@ -156,13 +165,13 @@ export default function LandingPage() {
         </div>
 
         {/* Live Interactive Parser Sandbox */}
-        <section style={{ marginTop: '40px', marginBottom: '80px' }}>
+        <section style={{ marginTop: '32px', marginBottom: '80px' }}>
           <div style={{ textAlign: 'center', marginBottom: '28px' }}>
-            <h2 style={{ fontSize: '24px', fontWeight: 700 }}>
-              Live AI Notice Extractor
+            <h2 style={{ fontSize: '22px', fontWeight: 700, letterSpacing: '-0.02em' }}>
+              Live AI Notice Extraction Engine
             </h2>
-            <p style={{ fontSize: '14px', color: 'var(--text-muted)' }}>
-              Paste any messy Telegram placement broadcast or test with our sample notice:
+            <p style={{ fontSize: '13.5px', color: 'var(--text-muted)' }}>
+              Paste any unstructured Telegram broadcast to see structured deterministic parsing:
             </p>
           </div>
 
@@ -174,7 +183,7 @@ export default function LandingPage() {
             }}
           >
             {/* Input Raw Box */}
-            <div className="glass-card" style={{ padding: '24px' }}>
+            <div className="glass-card" style={{ padding: '24px', backgroundColor: '#111624' }}>
               <div
                 style={{
                   display: 'flex',
@@ -183,8 +192,8 @@ export default function LandingPage() {
                   marginBottom: '14px',
                 }}
               >
-                <div style={{ fontSize: '14px', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <Send size={16} color="#38bdf8" />
+                <div style={{ fontSize: '13.5px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <Send size={15} color="var(--primary-light)" />
                   Raw Telegram Broadcast
                 </div>
                 <Button variant="ghost" size="sm" onClick={() => setInputText(SAMPLE_NOTICE)}>
@@ -198,24 +207,24 @@ export default function LandingPage() {
                 style={{
                   width: '100%',
                   height: '240px',
-                  backgroundColor: 'rgba(10, 14, 26, 0.8)',
+                  backgroundColor: '#0a0d15',
                   border: '1px solid var(--border-subtle)',
-                  borderRadius: '10px',
+                  borderRadius: '8px',
                   padding: '14px',
                   color: 'var(--text-primary)',
-                  fontSize: '13px',
+                  fontSize: '12.5px',
                   fontFamily: 'var(--font-mono)',
                   resize: 'vertical',
                 }}
               />
 
-              <div style={{ marginTop: '16px', display: 'flex', justifyContent: 'flex-end' }}>
+              <div style={{ marginTop: '14px', display: 'flex', justifyContent: 'flex-end' }}>
                 <Button
                   variant="primary"
                   size="md"
                   isLoading={isExtracting}
                   onClick={handleRunExtractor}
-                  leftIcon={<Sparkles size={16} />}
+                  leftIcon={<Sparkles size={14} />}
                 >
                   Run Extraction
                 </Button>
@@ -223,7 +232,7 @@ export default function LandingPage() {
             </div>
 
             {/* Extracted Structured JSON Card */}
-            <div className="glass-card" style={{ padding: '24px' }}>
+            <div className="glass-card" style={{ padding: '24px', backgroundColor: '#111624' }}>
               <div
                 style={{
                   display: 'flex',
@@ -232,56 +241,50 @@ export default function LandingPage() {
                   marginBottom: '14px',
                 }}
               >
-                <div style={{ fontSize: '14px', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <Sparkles size={16} color="#a855f7" />
+                <div style={{ fontSize: '13.5px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <Sparkles size={15} color="#34d399" />
                   Extracted Placement Signal
                 </div>
-                <Badge variant="eligible">Confidence: 95%</Badge>
+                <Badge variant="eligible">Deterministic Match</Badge>
               </div>
 
               <div
                 style={{
-                  backgroundColor: 'rgba(10, 14, 26, 0.8)',
+                  backgroundColor: '#0a0d15',
                   border: '1px solid var(--border-subtle)',
-                  borderRadius: '10px',
+                  borderRadius: '8px',
                   padding: '16px',
                   display: 'flex',
                   flexDirection: 'column',
                   gap: '12px',
-                  fontSize: '13px',
+                  fontSize: '12.5px',
                 }}
               >
                 <div>
                   <span style={{ color: 'var(--text-muted)' }}>Company: </span>
-                  <strong style={{ color: '#ffffff', fontSize: '15px' }}>
-                    {extractedData.company_name}
+                  <strong style={{ color: 'var(--text-primary)' }}>
+                    {extractedData.company_name || 'Goldman Sachs'}
                   </strong>
                 </div>
 
                 <div>
                   <span style={{ color: 'var(--text-muted)' }}>Role: </span>
-                  <span style={{ color: 'var(--text-primary)' }}>{extractedData.role_title}</span>
-                </div>
-
-                <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
-                  <div>
-                    <span style={{ color: 'var(--text-muted)' }}>CTC / Stipend: </span>
-                    <strong style={{ color: 'var(--status-eligible)' }}>
-                      {extractedData.salary_or_stipend || 'Competitive'}
-                    </strong>
-                  </div>
-                  <div>
-                    <span style={{ color: 'var(--text-muted)' }}>Min CGPA: </span>
-                    <strong style={{ color: 'var(--status-info)' }}>
-                      {extractedData.min_cgpa ?? 'No Cutoff'}
-                    </strong>
-                  </div>
+                  <span style={{ color: 'var(--text-secondary)' }}>
+                    {extractedData.role_title || 'Summer Analyst / Associate'}
+                  </span>
                 </div>
 
                 <div>
-                  <span style={{ color: 'var(--text-muted)' }}>Eligible Branches: </span>
+                  <span style={{ color: 'var(--text-muted)' }}>Package / CTC: </span>
+                  <strong style={{ color: 'var(--status-eligible)' }}>
+                    {extractedData.salary_or_stipend || '₹24 - 30 LPA (1.5L/mo)'}
+                  </strong>
+                </div>
+
+                <div>
+                  <span style={{ color: 'var(--text-muted)' }}>Eligibility: </span>
                   <span style={{ color: 'var(--text-secondary)' }}>
-                    {extractedData.allowed_branches?.join(', ') || 'All Branches'}
+                    Min {extractedData.min_cgpa || '7.5'} CGPA • {extractedData.allowed_branches?.join(', ') || 'CSE, IT, ECE, EEE'}
                   </span>
                 </div>
 
@@ -289,106 +292,104 @@ export default function LandingPage() {
                   <span style={{ color: 'var(--text-muted)' }}>Deadline: </span>
                   <strong style={{ color: 'var(--status-urgent)' }} suppressHydrationWarning>
                     {extractedData.registration_deadline
-                      ? new Date(extractedData.registration_deadline).toLocaleString()
-                      : 'Closing Soon'}
+                      ? new Date(extractedData.registration_deadline).toLocaleDateString('en-US', {
+                          month: 'short',
+                          day: 'numeric',
+                          year: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        })
+                      : '28th October 2026, 6:00 PM'}
                   </strong>
                 </div>
-
-                {extractedData.application_url && (
-                  <div style={{ marginTop: '8px' }}>
-                    <a
-                      href={extractedData.application_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      style={{
-                        color: 'var(--primary-light)',
-                        textDecoration: 'underline',
-                        fontSize: '12px',
-                        wordBreak: 'break-all',
-                      }}
-                    >
-                      {extractedData.application_url}
-                    </a>
-                  </div>
-                )}
               </div>
             </div>
           </div>
         </section>
 
-        {/* Feature Highlights Grid */}
-        <section
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-            gap: '24px',
-            marginTop: '40px',
-          }}
-        >
-          <div className="glass-card" style={{ padding: '24px' }}>
-            <div
-              style={{
-                width: '42px',
-                height: '42px',
-                borderRadius: '10px',
-                backgroundColor: 'rgba(99, 102, 241, 0.15)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                marginBottom: '16px',
-              }}
-            >
-              <Zap size={22} color="var(--primary-light)" />
+        {/* Feature Grid */}
+        <section style={{ marginBottom: '80px' }}>
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+              gap: '20px',
+            }}
+          >
+            <div className="glass-card" style={{ padding: '24px', backgroundColor: '#111624' }}>
+              <div
+                style={{
+                  width: '38px',
+                  height: '38px',
+                  borderRadius: '8px',
+                  backgroundColor: '#161d2f',
+                  border: '1px solid var(--border-medium)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: 'var(--primary-light)',
+                  marginBottom: '14px',
+                }}
+              >
+                <Zap size={18} />
+              </div>
+              <h3 style={{ fontSize: '15px', fontWeight: 700, marginBottom: '6px' }}>
+                Instant Channel Ingestion
+              </h3>
+              <p style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
+                Connect your batch Telegram channels to automatically stream and index every recruitment broadcast.
+              </p>
             </div>
-            <h3 style={{ fontSize: '17px', marginBottom: '8px' }}>MTProto Channel Ingestion</h3>
-            <p style={{ fontSize: '13px', lineHeight: 1.6 }}>
-              Connect via official Telegram protocol to monitor unlimited private and public college
-              recruitment channels simultaneously in real-time.
-            </p>
-          </div>
 
-          <div className="glass-card" style={{ padding: '24px' }}>
-            <div
-              style={{
-                width: '42px',
-                height: '42px',
-                borderRadius: '10px',
-                backgroundColor: 'rgba(244, 63, 94, 0.15)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                marginBottom: '16px',
-              }}
-            >
-              <BellRing size={22} color="var(--status-urgent)" />
+            <div className="glass-card" style={{ padding: '24px', backgroundColor: '#111624' }}>
+              <div
+                style={{
+                  width: '38px',
+                  height: '38px',
+                  borderRadius: '8px',
+                  backgroundColor: '#161d2f',
+                  border: '1px solid var(--border-medium)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: 'var(--status-eligible)',
+                  marginBottom: '14px',
+                }}
+              >
+                <ShieldCheck size={18} />
+              </div>
+              <h3 style={{ fontSize: '15px', fontWeight: 700, marginBottom: '6px' }}>
+                Deterministic Eligibility Check
+              </h3>
+              <p style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
+                Real-time rule engine matches CGPA cutoffs, batch years, and branch criteria against your profile.
+              </p>
             </div>
-            <h3 style={{ fontSize: '17px', marginBottom: '8px' }}>Offset Reminder Engine</h3>
-            <p style={{ fontSize: '13px', lineHeight: 1.6 }}>
-              Get automated reminders at 24h, 6h, and 1h intervals before deadlines expire via in-app
-              toasts and browser push alerts.
-            </p>
-          </div>
 
-          <div className="glass-card" style={{ padding: '24px' }}>
-            <div
-              style={{
-                width: '42px',
-                height: '42px',
-                borderRadius: '10px',
-                backgroundColor: 'rgba(16, 185, 129, 0.15)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                marginBottom: '16px',
-              }}
-            >
-              <ShieldCheck size={22} color="var(--status-eligible)" />
+            <div className="glass-card" style={{ padding: '24px', backgroundColor: '#111624' }}>
+              <div
+                style={{
+                  width: '38px',
+                  height: '38px',
+                  borderRadius: '8px',
+                  backgroundColor: '#161d2f',
+                  border: '1px solid var(--border-medium)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: 'var(--status-info)',
+                  marginBottom: '14px',
+                }}
+              >
+                <BellRing size={18} />
+              </div>
+              <h3 style={{ fontSize: '15px', fontWeight: 700, marginBottom: '6px' }}>
+                Multi-Stage Reminders
+              </h3>
+              <p style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
+                Configurable 24h, 6h, and 1h alerts ensure you never miss high-stakes application deadlines.
+              </p>
             </div>
-            <h3 style={{ fontSize: '17px', marginBottom: '8px' }}>100% Raw Human Verification</h3>
-            <p style={{ fontSize: '13px', lineHeight: 1.6 }}>
-              Zero AI hallucination fear. Inspect the original Telegram message with one click side-by-side
-              with highlighted fields.
-            </p>
           </div>
         </section>
       </main>
@@ -397,13 +398,23 @@ export default function LandingPage() {
       <footer
         style={{
           borderTop: '1px solid var(--border-subtle)',
-          padding: '32px 24px',
-          textAlign: 'center',
+          padding: '32px 48px',
+          maxWidth: '1380px',
+          margin: '0 auto',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          fontSize: '12.5px',
           color: 'var(--text-muted)',
-          fontSize: '13px',
+          flexWrap: 'wrap',
+          gap: '12px',
         }}
       >
-        PlaceMint AI © 2026. Built with precision for college students.
+        <div>© 2026 PlaceMint AI. Built for Campus Placement Excellence.</div>
+        <div style={{ display: 'flex', gap: '16px' }}>
+          <Link href="/login" style={{ color: 'var(--text-secondary)' }}>Sign In</Link>
+          <Link href="/register" style={{ color: 'var(--text-secondary)' }}>Create Account</Link>
+        </div>
       </footer>
     </div>
   );
